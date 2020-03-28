@@ -1,0 +1,14 @@
+.pio
+.vscode
+build
+.vs
+*.exe
+*.dll
+*.o
+*.elf
+*.bin
+*.so
+*.out
+**/config.txt
+config.txt
+*.pem

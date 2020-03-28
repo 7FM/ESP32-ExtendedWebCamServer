@@ -1,0 +1,77 @@
+menu "CameraWebServer Parameters"
+
+    config CONFIG_FILE_PATH
+        string "Config file path"
+        default "config.txt"
+        help
+            File on the SD Card which contains config information like the WiFi SSID.
+
+    config FALLBACK_WIFI_SSID
+        string "Fallback WiFi SSID"
+        default "SSID"
+        help
+            Fallback WiFi SSID if it was not configured within the config file.
+
+    config FALLBACK_WIFI_PWD
+        string "Fallback WiFi password"
+        default "PASSWORD"
+        help
+            Fallback WiFi password if it was not configured within the config file.
+
+    config FALLBACK_DEVICE_NAME
+        string "Fallback device name"
+        default "SPYCAM"
+        help
+            Fallback device name if it was not configured within the config file.
+
+    config OTA_FEATURE
+        bool "Enable Over the Air(OTA) updates"
+        default y
+        help
+            Enable or disable OTA feature
+
+    menu "Over the Air(OTA) Parameters"
+        depends on OTA_FEATURE
+
+        config FALLBACK_FIRMWARE_UPGRADE_URL
+            string "Firmware Upgrade URL"
+            default "https://192.168.42.42:42424/upgrade.bin"
+            help
+                Fallback URL of server which hosts the firmware image if non was specified in a config file.
+
+        config CONFIG_SKIP_COMMON_NAME_CHECK
+            bool "Skip the common name check during certificate verification."
+            default n
+            help
+                This option is might be needed if you are using a local OTA server without a domain name.
+
+        config OTA_RECV_TIMEOUT
+            int "Connection Timeout"
+            default 5000
+            help
+                Timeout in millis for connecting to the OTA server.
+            
+    endmenu
+
+    menu "Timelapse Parameters"
+        config CAM_TASK_TIMER_GROUP_NUM
+            int "Timer group for timeplapse"
+            default 1
+            range 1 2
+            help
+                Timer group to use which is needed for the timelapse.
+
+        config CAM_TASK_TIMER_NUM
+            int "Timer number for timeplapse"
+            default 1
+            range 1 2
+            help
+                Timer number to use inside the timer group which is needed for the timelapse.
+
+        config TMP_INDEX_FILE_PATH
+            string "Temporary index file path"
+            default ".tmpavi.idx"
+            help
+                Temporary file for the index needed to create a avi file during the timelapse.
+    endmenu
+endmenu
