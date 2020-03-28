@@ -1,0 +1,6 @@
+[submodule "CameraWebServer/components/esp32-camera"]
+	path = CameraWebServer/components/esp32-camera
+	url = https://github.com/7FM/esp32-camera.git
+[submodule "CameraWebServer/components/arduino"]
+	path = CameraWebServer/components/arduino
+	url = https://github.com/7FM/arduino-esp32.git
