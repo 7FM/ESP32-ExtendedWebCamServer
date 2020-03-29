@@ -87,6 +87,14 @@ extern const uint8_t ota_server_ca_pem_start[] asm("_binary_ota_server_ca_pem_st
 #define FALLBACK_DEVICE_NAME "SPYCAM"
 #endif
 
+#ifdef CONFIG_FLASH_LED_PIN
+#define FLASH_LED_PIN CONFIG_FLASH_LED_PIN
+#endif
+
+#ifndef FLASH_LED_PIN
+#define FLASH_LED_PIN 4
+#endif
+
 #ifdef OTA_FEATURE
 #define MAX_OPTION_NAMES 7
 #else
@@ -160,11 +168,7 @@ void checkForUpdate() {
 }
 #endif
 
-static inline esp_err_t init_sdcard(sdmmc_card_t **card) {
-    // using 1 bit mode, shut off the Blinding Disk-Active Light
-    pinMode(4, OUTPUT);
-    digitalWrite(4, LOW);
-
+static inline esp_err_t initSDcard(sdmmc_card_t **card) {
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     host.flags = SDMMC_HOST_FLAG_1BIT; // using 1 bit mode
     host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
@@ -259,6 +263,10 @@ extern "C" void app_main() {
     s->set_hmirror(s, 1);
 #endif
 
+    // Turn flash light off
+    pinMode(FLASH_LED_PIN, OUTPUT);
+    digitalWrite(FLASH_LED_PIN, LOW);
+
     String ssid = FALLBACK_WIFI_SSID;
     String password = FALLBACK_WIFI_PWD;
     String devName = FALLBACK_DEVICE_NAME;
@@ -270,7 +278,7 @@ extern "C" void app_main() {
 
     // initialize & mount SD card
     sdmmc_card_t *card;
-    if (init_sdcard(&card) != ESP_OK) {
+    if (initSDcard(&card) != ESP_OK) {
         Serial.println("Card Mount Failed");
     } else {
 

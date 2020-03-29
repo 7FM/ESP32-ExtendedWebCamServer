@@ -70,6 +70,14 @@ static inline int handleUpdateCheck() {
 #define TMP_INDEX_FILE_PATH ".tmpavi.idx"
 #endif
 
+#ifdef CONFIG_FLASH_LED_PIN
+#define FLASH_LED_PIN CONFIG_FLASH_LED_PIN
+#endif
+
+#ifndef FLASH_LED_PIN
+#define FLASH_LED_PIN 4
+#endif
+
 #define _CAM_TASK_TIMER_GROUP_NUM TIMER_GROUP_NUM(CAM_TASK_TIMER_GROUP_NUM)
 #define _CAM_TASK_TIMER_NUM TIMER_NUM(CAM_TASK_TIMER_NUM)
 
@@ -89,7 +97,6 @@ static inline int handleUpdateCheck() {
 #define _STREAM_PART "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n"
 
 #define JPG_QUALITY 80
-#define FLASH_LED_PIN 4
 
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;

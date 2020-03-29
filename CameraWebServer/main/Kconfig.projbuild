@@ -24,6 +24,12 @@ menu "CameraWebServer Parameters"
         help
             Fallback device name if it was not configured within the config file.
 
+    config FLASH_LED_PIN
+        int "Flash LED Pin"
+        default 4
+        help
+            Pin to trigger a flash light for taking images
+
     config OTA_FEATURE
         bool "Enable Over the Air(OTA) updates"
         default y
