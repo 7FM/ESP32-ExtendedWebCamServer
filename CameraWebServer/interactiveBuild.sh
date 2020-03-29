@@ -1,3 +1,6 @@
 #!/bin/sh
-#docker run --rm -v $PWD:/project -w /project -it espressif/idf:release-v4.0
-docker run --rm -v $PWD:/project -w /project -it espressif/idf:latest
+
+#image='espressif/idf:release-v4.0'
+image='espressif/idf:latest'
+docker pull "$image"
+docker run --rm -v $PWD:/project -w /project -it "$image"
