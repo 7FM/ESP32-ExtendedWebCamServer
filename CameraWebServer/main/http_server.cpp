@@ -29,6 +29,7 @@
 
 // Local files
 #include "camera_website_index.h"
+#include "fs_helper.h"
 #include "http_server.h"
 
 // Include the config
@@ -364,6 +365,41 @@ static inline int handleLED(int led) {
     return 0;
 }
 
+static inline unsigned char h2int(char c) {
+    if (c >= '0' && c <= '9') {
+        return ((unsigned char)c - '0');
+    }
+    if (c >= 'a' && c <= 'f') {
+        return ((unsigned char)c - 'a' + 10);
+    }
+    if (c >= 'A' && c <= 'F') {
+        return ((unsigned char)c - 'A' + 10);
+    }
+    return '\0';
+}
+
+static inline bool urldecode(char *str, size_t length) {
+    size_t resIdx = 0;
+    for (size_t i = 0; i < length; i++) {
+        char c = str[i];
+        if (c == '+') {
+            c = ' ';
+        } else if (c == '%') {
+            if (i + 2 >= length) {
+                // Invalid encoding abort!
+                str[resIdx] = '\0';
+                return false;
+            }
+            char code0 = str[++i];
+            char code1 = str[++i];
+            c = (h2int(code0) << 4) | h2int(code1);
+        }
+        str[resIdx++] = c;
+    }
+    str[resIdx] = '\0';
+    return true;
+}
+
 static size_t jpg_encode_stream(void *arg, size_t index, const void *data, size_t len) {
     httpd_req_t *req = (httpd_req_t *)arg;
     if (httpd_resp_send_chunk(req, (const char *)data, len) != ESP_OK) {
@@ -657,6 +693,108 @@ static esp_err_t index_handler(httpd_req_t *req) {
                            index_ov2640_html_gz_len);
 }
 
+static bool handleFSEntry(const char *name, bool isDir, void *arg) {
+    httpd_req_t *req = (httpd_req_t *)arg;
+
+#define NAME_FIELD ",{\"name\":\""
+#define IS_DIR "\",\"is_dir\":"
+#define IS_DIR_TRUE IS_DIR "true}"
+#define IS_DIR_FALSE IS_DIR "false}"
+    return httpd_resp_send_chunk(req, NAME_FIELD, CONST_STR_LEN(NAME_FIELD)) == ESP_OK &&
+           httpd_resp_sendstr_chunk(req, name) == ESP_OK &&
+           (isDir ? httpd_resp_send_chunk(req, IS_DIR_TRUE, CONST_STR_LEN(IS_DIR_TRUE)) : httpd_resp_send_chunk(req, IS_DIR_FALSE, CONST_STR_LEN(IS_DIR_FALSE))) == ESP_OK;
+}
+
+static esp_err_t filesystem_handler(httpd_req_t *req) {
+
+    if (SDCardAvailable) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    char *buf;
+
+    size_t buf_len = httpd_req_get_url_query_len(req) + 1;
+
+    //TODO adjustable?
+    char filepath[256];
+
+    if (buf_len > 1) {
+        buf = (char *)malloc(buf_len);
+        if (!buf) {
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        if (httpd_req_get_url_query_str(req, buf, buf_len) != ESP_OK ||
+            httpd_query_key_value(buf, "path", filepath, sizeof(filepath)) != ESP_OK) {
+            free(buf);
+            httpd_resp_send_404(req);
+            return ESP_FAIL;
+        }
+        free(buf);
+    } else {
+        httpd_resp_send_404(req);
+        return ESP_FAIL;
+    }
+
+    if (!urldecode(filepath, strlen(filepath))) {
+        httpd_resp_send_404(req);
+        return ESP_FAIL;
+    }
+
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+
+    esp_err_t res = ESP_OK;
+
+    switch (getType(filepath)) {
+        case DIR_TYPE: {
+            // If this is a dir we want to browse that dir else download the file
+            httpd_resp_set_type(req, "application/json");
+
+#define PARENT_ENTRY "[{\"name\":\"..\",\"is_dir\":true}"
+            if (httpd_resp_send_chunk(req, PARENT_ENTRY, CONST_STR_LEN(PARENT_ENTRY)) != ESP_OK || !listDirectory(filepath, handleFSEntry, req) || httpd_resp_send_chunk(req, "]", 1) != ESP_OK) {
+                res = ESP_FAIL;
+            }
+            break;
+        }
+
+        case FILE_TYPE: {
+            // Else download the file
+
+            httpd_resp_set_type(req, "text/plain");
+
+            FILE *file = fopen(filepath, "rb");
+
+            if (!file) {
+                res = ESP_FAIL;
+            } else {
+                char readBuf[512];
+                for (int read; (read = fread(readBuf, 1, sizeof(readBuf), file));) {
+                    if (httpd_resp_send_chunk(req, readBuf, read) != ESP_OK) {
+                        res = ESP_FAIL;
+                        break;
+                    }
+                }
+
+                fclose(file);
+            }
+            break;
+        }
+
+        default:
+            res = ESP_FAIL;
+            break;
+    }
+
+    httpd_resp_send_chunk(req, NULL, 0);
+
+    if (res != ESP_OK) {
+        httpd_resp_send_500(req);
+    }
+
+    return res;
+}
+
 void startCameraServer() {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
@@ -680,6 +818,11 @@ void startCameraServer() {
                                .handler = capture_handler,
                                .user_ctx = NULL};
 
+    httpd_uri_t fs_uri = {.uri = "/fs",
+                          .method = HTTP_GET,
+                          .handler = filesystem_handler,
+                          .user_ctx = NULL};
+
     httpd_uri_t stream_uri = {.uri = "/stream",
                               .method = HTTP_GET,
                               .handler = stream_handler,
@@ -693,6 +836,7 @@ void startCameraServer() {
         httpd_register_uri_handler(camera_httpd, &cmd_uri);
         httpd_register_uri_handler(camera_httpd, &status_uri);
         httpd_register_uri_handler(camera_httpd, &capture_uri);
+        httpd_register_uri_handler(camera_httpd, &fs_uri);
     }
 
     config.server_port += 1;
