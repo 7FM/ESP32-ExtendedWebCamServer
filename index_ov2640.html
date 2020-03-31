@@ -662,9 +662,9 @@
 
             function updateLapseState(state) {
                 if (state) {
-                    lapseButton.innerHTML = 'Stop Timelapse'
+                    lapseButton.innerHTML = 'Stop Lapse'
                 } else {
-                    lapseButton.innerHTML = 'Start Timelapse'
+                    lapseButton.innerHTML = 'Start Lapse'
                 }
                 document
                     .querySelectorAll('disableOnLapse')
@@ -738,7 +738,7 @@
 
             lapseButton.onclick = () => {
                 if (!lapseButton.classList.contains('disabled')) {
-                    const lapseEnabled = lapseButton.innerHTML === 'Start Timelapse'
+                    const lapseEnabled = lapseButton.innerHTML === 'Start Lapse'
                     let value
                     if (lapseEnabled) {
                         value = 1
