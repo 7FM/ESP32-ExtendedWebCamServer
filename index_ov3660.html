@@ -572,7 +572,7 @@
                         <div class="range-max">60</div>
                     </div>
                     <div class="input-group" id="frame_delay-group">
-                        <label for="frame_delay">Lapse Frame Delay in ms</label>
+                        <label for="frame_delay">Lapse Delay in ms</label>
                         <div class="range-min">100</div>
                         <input type="range" id="frame_delay" min="100" max="60000" step="100" value="500"
                             class="default-action disableOnLapse">
@@ -718,7 +718,7 @@
                             updateValue(el, state[el.id], false)
                         })
 
-                    if (state['avail-lapse']) {
+                    if (state['sd-avail']) {
                         enable(lapseButton)
                         updateLapseState(state[lapseButton.id]);
                     } else {

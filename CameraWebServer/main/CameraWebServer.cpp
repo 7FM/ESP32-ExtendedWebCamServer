@@ -157,7 +157,7 @@ static int OPTION_NAME_LENGTHS[] = {
 #endif
 };
 
-bool timeLapsePossible = false;
+bool SDCardAvailable = false;
 
 #ifdef OTA_FEATURE
 static String firmwareUpgradeURL = FALLBACK_FIRMWARE_UPGRADE_URL;
@@ -337,7 +337,7 @@ extern "C" void app_main() {
             fclose(configFile);
         }
 
-        timeLapsePossible = true;
+        SDCardAvailable = true;
     }
 
     //TODO remove if eeprom solution is implemented

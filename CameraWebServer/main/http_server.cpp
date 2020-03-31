@@ -98,10 +98,10 @@ static inline int handleUpdateCheck() {
 
 #define JPG_QUALITY 80
 
-httpd_handle_t stream_httpd = NULL;
-httpd_handle_t camera_httpd = NULL;
+static httpd_handle_t stream_httpd = NULL;
+static httpd_handle_t camera_httpd = NULL;
 
-extern bool timeLapsePossible;
+extern bool SDCardAvailable;
 
 static int camLEDStatus = 0;
 static int useFlash = 0;
@@ -479,14 +479,12 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 //TODO add feature to stop lapse automatically after certain time/number of frames
 //TODO maybe EEPROM for camera parameters? add option to save/load and load and set at configure phase
 static esp_err_t cmd_handler(httpd_req_t *req) {
-    char *buf;
-    size_t buf_len;
-    char variable[32] = {0};
-    char value[32] = {0};
+    char variable[32];
+    char value[32];
 
-    buf_len = httpd_req_get_url_query_len(req) + 1;
+    size_t buf_len = httpd_req_get_url_query_len(req) + 1;
     if (buf_len > 1) {
-        buf = (char *)malloc(buf_len);
+        char *buf = (char *)malloc(buf_len);
         if (!buf) {
             httpd_resp_send_500(req);
             return ESP_FAIL;
@@ -562,7 +560,7 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     } else if (!strcmp(variable, "use_flash")) {
         useFlash = val;
     } else if (!strcmp(variable, "lapse-running")) {
-        if (timeLapsePossible) {
+        if (SDCardAvailable) {
             res = handleLapse(s, val);
         }
     } else if (!lapseRunning && !strcmp(variable, "video_fps")) {
@@ -594,7 +592,8 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
 }
 
 static esp_err_t status_handler(httpd_req_t *req) {
-    static char json_response[1024];
+    //TODO reduce size as needed!
+    char json_response[512];
 
     sensor_t *s = esp_camera_sensor_get();
     char *p = json_response;
@@ -627,14 +626,16 @@ static esp_err_t status_handler(httpd_req_t *req) {
     p += sprintf(p, "\"led\":%u,", camLEDStatus);
     p += sprintf(p, "\"use_flash\":%u,", useFlash);
     p += sprintf(p, "\"toggle-lapse\":%s,", BOOL_TO_STR(lapseRunning));
-    p += sprintf(p, "\"avail-lapse\":%s,", BOOL_TO_STR(timeLapsePossible));
+    p += sprintf(p, "\"sd-avail\":%s,", BOOL_TO_STR(SDCardAvailable));
+    p += sprintf(p, "\"frame_delay\":%u,", millisBetweenSnapshots);
+    p += sprintf(p, "\"video_fps\":%u,", videoFPS);
 #ifdef OTA_FEATURE
     p += sprintf(p, "\"check-update\":true");
 #else
     p += sprintf(p, "\"check-update\":false");
 #endif
     *p++ = '}';
-    *p = '\0';
+    //*p = '\0';
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
@@ -683,7 +684,8 @@ void startCameraServer() {
                               .handler = stream_handler,
                               .user_ctx = NULL};
 
-    config.stack_size = 8192;
+    //TODO add favicon.ico
+    config.stack_size = 7148;
     Serial.printf("Starting web server on port: '%d'\n", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(camera_httpd, &index_uri);
@@ -700,26 +702,28 @@ void startCameraServer() {
         httpd_register_uri_handler(stream_httpd, &stream_uri);
     }
 
-    xTaskCreatePinnedToCore(
-        cameraTaskRoutine,
-        "CameraTask",
-        2048,
-        NULL,
-        1,
-        &cameraTask,
-        tskNO_AFFINITY);
+    if (SDCardAvailable) {
+        xTaskCreatePinnedToCore(
+            cameraTaskRoutine,
+            "CameraTask",
+            2048,
+            NULL,
+            1,
+            &cameraTask,
+            tskNO_AFFINITY);
 
-    xTaskCreatePinnedToCore(
-        aviTaskRoutine,
-        "AVI_Task",
-        2048,
-        NULL,
-        2,
-        &aviTask,
-        tskNO_AFFINITY);
+        xTaskCreatePinnedToCore(
+            aviTaskRoutine,
+            "AVI_Task",
+            2048,
+            NULL,
+            2,
+            &aviTask,
+            tskNO_AFFINITY);
 
-    vTaskSuspend(cameraTask);
-    vTaskSuspend(aviTask);
+        vTaskSuspend(cameraTask);
+        vTaskSuspend(aviTask);
+    }
 
     //TODO check actually needed stack sizes: https://www.esp32.com/viewtopic.php?t=3692 https://www.freertos.org/uxTaskGetSystemState.html
 }
