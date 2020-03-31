@@ -182,6 +182,47 @@ static inline esp_err_t initSDcard(sdmmc_card_t **card) {
     return esp_vfs_fat_sdmmc_mount("", &host, &slot_config, &mount_config, card);
 }
 
+static inline void initWifi(const char *ssid, const char *password, const char *devName, bool tryForever = false) {
+
+    // Disable wifi power safing
+    esp_wifi_set_ps(WIFI_PS_NONE);
+
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_STA);
+    WiFi.setHostname(devName);
+    WiFi.begin(ssid, password);
+
+    delay(1000);
+    for (int tries = 0; WiFi.status() != WL_CONNECTED; ++tries) {
+
+        if (tries == 10) {
+            Serial.println("Cannot connect - try again");
+            WiFi.begin(ssid, password);
+        } else if (tries >= 20) {
+            if (tryForever) {
+                tries = 0;
+            } else {
+                return;
+            }
+        }
+
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("");
+    Serial.println("WiFi connected");
+
+    if (!MDNS.begin(devName)) {
+        Serial.println("Error setting up MDNS responder!");
+    } else {
+        Serial.printf("mDNS responder started '%s'\n", devName);
+    }
+
+    Serial.print("Camera Ready! Use 'http://");
+    Serial.print(WiFi.localIP());
+    Serial.println("' to connect");
+}
+
 extern "C" void app_main() {
     initArduino();
 
@@ -322,32 +363,28 @@ extern "C" void app_main() {
     initOTA();
 #endif
 
-    WiFi.begin(ssid.c_str(), password.c_str());
-    WiFi.setHostname(devName.c_str());
-
-    // Disable wifi power safing
-    esp_wifi_set_ps(WIFI_PS_NONE);
-
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
+    initWifi(ssid.c_str(), password.c_str(), devName.c_str(), true);
 
 #ifdef OTA_FEATURE
     checkForUpdate();
 #endif
 
-    if (!MDNS.begin(devName.c_str())) {
-        Serial.println("Error setting up MDNS responder!");
-    } else {
-        Serial.printf("mDNS responder started '%s'\n", devName.c_str());
-    }
-
     startCameraServer();
 
-    Serial.print("Camera Ready! Use 'http://");
-    Serial.print(WiFi.localIP());
-    Serial.println("' to connect");
+    for (;;) {
+        if (WiFi.status() != WL_CONNECTED) {
+
+            Serial.println("***** WiFi reconnect *****");
+            WiFi.reconnect();
+            delay(10000);
+
+            if (WiFi.status() != WL_CONNECTED) {
+                Serial.println("***** WiFi restart *****");
+                initWifi(ssid.c_str(), password.c_str(), devName.c_str());
+            }
+        }
+
+        // Wait for 60s
+        delay(60000);
+    }
 }
