@@ -97,6 +97,7 @@ static inline int handleUpdateCheck() {
 #define _STREAM_PART "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n"
 
 #define JPG_QUALITY 80
+#define FLASH_LIGHT_WAIT 20 / portTICK_PERIOD_MS
 
 static httpd_handle_t stream_httpd = NULL;
 static httpd_handle_t camera_httpd = NULL;
@@ -377,7 +378,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
     if (mustEnableFlashLight) {
         pinMode(FLASH_LED_PIN, OUTPUT);
         digitalWrite(FLASH_LED_PIN, HIGH);
-        //TODO delay needed?
+        vTaskDelay(FLASH_LIGHT_WAIT);
     }
 
     camera_fb_t *fb = esp_camera_fb_get();
