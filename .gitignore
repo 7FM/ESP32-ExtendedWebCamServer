@@ -12,3 +12,4 @@ build
 **/config.txt
 config.txt
 *.pem
+*.gz
