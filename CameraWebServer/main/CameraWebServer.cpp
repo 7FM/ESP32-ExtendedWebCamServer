@@ -13,34 +13,9 @@
 #include "makros.h"
 
 // Include the config
-#include "sdkconfig.h"
-
-// Config values
-#ifdef CONFIG_OTA_FEATURE
-#define OTA_FEATURE
-#endif
+#include "config.h"
 
 #ifdef OTA_FEATURE
-
-#ifdef CONFIG_FALLBACK_FIRMWARE_UPGRADE_URL
-#define FALLBACK_FIRMWARE_UPGRADE_URL CONFIG_FALLBACK_FIRMWARE_UPGRADE_URL
-#endif
-
-#ifdef CONFIG_OTA_RECV_TIMEOUT
-#define OTA_RECV_TIMEOUT CONFIG_OTA_RECV_TIMEOUT
-#endif
-
-#ifdef CONFIG_SKIP_COMMON_NAME_CHECK
-#define SKIP_COMMON_NAME_CHECK
-#endif
-
-#ifndef FALLBACK_FIRMWARE_UPGRADE_URL
-#define FALLBACK_FIRMWARE_UPGRADE_URL "https://192.168.42.42:42424/upgrade.bin"
-#endif
-
-#ifndef OTA_RECV_TIMEOUT
-#define OTA_RECV_TIMEOUT 5000
-#endif
 
 #include "ota_handler.hpp"
 
@@ -56,45 +31,6 @@ extern const uint8_t ota_server_ca_pem_start[] asm("_binary_ota_server_ca_pem_st
 #define CAMERA_MODEL_AI_THINKER
 
 #include "camera_pins.h"
-
-//#define EEPROM_SIZE 0x0F
-//#define COUNT_ADDRESS 0x00
-#ifdef CONFIG_CONFIG_FILE_PATH
-#define CONFIG_FILE_PATH CONFIG_CONFIG_FILE_PATH
-#endif
-
-#ifdef CONFIG_FALLBACK_WIFI_SSID
-#define FALLBACK_WIFI_SSID CONFIG_FALLBACK_WIFI_SSID
-#endif
-
-#ifdef CONFIG_FALLBACK_WIFI_PWD
-#define FALLBACK_WIFI_PWD CONFIG_FALLBACK_WIFI_PWD
-#endif
-
-#ifdef CONFIG_FALLBACK_DEVICE_NAME
-#define FALLBACK_DEVICE_NAME CONFIG_FALLBACK_DEVICE_NAME
-#endif
-
-#ifndef CONFIG_FILE_PATH
-#define CONFIG_FILE_PATH "config.txt"
-#endif
-#ifndef FALLBACK_WIFI_SSID
-#define FALLBACK_WIFI_SSID "SSID"
-#endif
-#ifndef FALLBACK_WIFI_PWD
-#define FALLBACK_WIFI_PWD "PASSWORD"
-#endif
-#ifndef FALLBACK_DEVICE_NAME
-#define FALLBACK_DEVICE_NAME "SPYCAM"
-#endif
-
-#ifdef CONFIG_FLASH_LED_PIN
-#define FLASH_LED_PIN CONFIG_FLASH_LED_PIN
-#endif
-
-#ifndef FLASH_LED_PIN
-#define FLASH_LED_PIN 4
-#endif
 
 #ifdef OTA_FEATURE
 #define MAX_OPTION_NAMES 7

@@ -18,31 +18,11 @@
 #include "driver/timer.h"
 
 // Include the config
-#include "sdkconfig.h"
+#include "config.h"
 
 // Makros
 #define TIMER_GROUP_NUM(x) (x == 0 ? TIMER_GROUP_0 : TIMER_GROUP_1)
 #define TIMER_NUM(x) (x == 0 ? TIMER_0 : TIMER_1)
-
-#ifdef CONFIG_CAM_TASK_TIMER_GROUP_NUM
-#define CAM_TASK_TIMER_GROUP_NUM CONFIG_CAM_TASK_TIMER_GROUP_NUM
-#endif
-#ifdef CONFIG_CAM_TASK_TIMER_NUM
-#define CAM_TASK_TIMER_NUM CONFIG_CAM_TASK_TIMER_NUM
-#endif
-#ifdef CONFIG_TMP_INDEX_FILE_PATH
-#define TMP_INDEX_FILE_PATH CONFIG_TMP_INDEX_FILE_PATH
-#endif
-
-#ifndef CAM_TASK_TIMER_GROUP_NUM
-#define CAM_TASK_TIMER_GROUP_NUM 1
-#endif
-#ifndef CAM_TASK_TIMER_NUM
-#define CAM_TASK_TIMER_NUM 1
-#endif
-#ifndef TMP_INDEX_FILE_PATH
-#define TMP_INDEX_FILE_PATH ".tmpavi.idx"
-#endif
 
 #define _CAM_TASK_TIMER_GROUP_NUM TIMER_GROUP_NUM(CAM_TASK_TIMER_GROUP_NUM)
 #define _CAM_TASK_TIMER_NUM TIMER_NUM(CAM_TASK_TIMER_NUM)

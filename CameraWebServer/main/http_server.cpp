@@ -24,11 +24,7 @@
 #include "makros.h"
 
 // Include the config
-#include "sdkconfig.h"
-
-#ifdef CONFIG_OTA_FEATURE
-#define OTA_FEATURE
-#endif
+#include "config.h"
 
 #ifdef OTA_FEATURE
 extern void checkForUpdate();
@@ -37,14 +33,6 @@ static inline int handleUpdateCheck() {
     checkForUpdate();
     return 0;
 }
-#endif
-
-#ifdef CONFIG_FLASH_LED_PIN
-#define FLASH_LED_PIN CONFIG_FLASH_LED_PIN
-#endif
-
-#ifndef FLASH_LED_PIN
-#define FLASH_LED_PIN 4
 #endif
 
 #define PART_BOUNDARY "123456789000000000000987654321"
