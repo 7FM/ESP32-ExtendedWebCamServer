@@ -8,8 +8,9 @@
 #include <WiFi.h>
 
 // Local files
-#include "config_reader.h"
-#include "http_server.h"
+#include "config_reader.hpp"
+#include "http_server.hpp"
+#include "makros.h"
 
 // Include the config
 #include "sdkconfig.h"
@@ -142,8 +143,6 @@ static const char *OPTION_NAMES[] = {
     "cert_path",
 #endif
 };
-
-#define NUMELEMS(x) (sizeof(x) / sizeof(x[0]))
 
 static int OPTION_NAME_LENGTHS[] = {
     2,
