@@ -63,13 +63,18 @@ extern size_t millisBetweenSnapshots;
 static int camLEDStatus = 0;
 static int useFlash = 0;
 
-static int led_duty = 0;
+static int led_duty = 255;
 static bool isStreaming = false;
 
 static inline void enable_led(bool en) { // Turn LED On or Off
-    int duty = en ? led_duty : 0;
-    if (en && isStreaming && (led_duty > CONFIG_LED_MAX_INTENSITY)) {
-        duty = CONFIG_LED_MAX_INTENSITY;
+    int duty = 0;
+
+    if (en) {
+        if (isStreaming && led_duty > CONFIG_LED_MAX_INTENSITY) {
+            duty = CONFIG_LED_MAX_INTENSITY;
+        } else {
+            duty = led_duty;
+        }
     }
     ledc_set_duty(CONFIG_LED_LEDC_SPEED_MODE, (ledc_channel_t)CONFIG_LED_LEDC_CHANNEL, duty);
     ledc_update_duty(CONFIG_LED_LEDC_SPEED_MODE, (ledc_channel_t)CONFIG_LED_LEDC_CHANNEL);
@@ -169,7 +174,9 @@ static esp_err_t stream_handler(httpd_req_t *req) {
             break;
         }
 
-        if (fb->format != PIXFORMAT_JPEG) {
+        const bool notJPEG = fb->format != PIXFORMAT_JPEG;
+
+        if (notJPEG) {
             bool jpeg_converted = frame2jpg(fb, JPG_QUALITY, &_jpg_buf, &_jpg_buf_len);
             if (!jpeg_converted) {
                 ESP_LOGE(TAG, "JPEG compression failed");
@@ -195,7 +202,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 
         esp_camera_fb_return(fb);
 
-        if (fb->format != PIXFORMAT_JPEG) {
+        if (notJPEG) {
             free(_jpg_buf);
             _jpg_buf = NULL;
             _jpg_buf_len = 0;
