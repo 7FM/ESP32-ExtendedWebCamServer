@@ -1,12 +1,9 @@
-#pragma once
-
-#include "Arduino.h"
-#include <stdio.h>
+#include "config_reader.hpp"
 
 static inline void removeStringChars(char **strPtr) {
-    char *str = *strPtr;
-    int length = strlen(str);
-    int lastIndex = length - 1;
+    char *const str = *strPtr;
+    const int length = strlen(str);
+    const int lastIndex = length - 1;
     if (str[lastIndex] == '\'' || str[lastIndex] == '"') {
         str[lastIndex] = '\0';
     }
@@ -59,7 +56,7 @@ static inline bool matchesOption(const char *fieldName, const char *const *optio
     return false;
 }
 
-inline void readConfig(FILE *file, const char *const *const options, int optionsCount, const int *optionNameLengths, String *const *parameters) {
+void readConfig(FILE *file, const char *const *const options, int optionsCount, const int *optionNameLengths, String *const *parameters) {
     String buffer;
     char readBuf[128];
 

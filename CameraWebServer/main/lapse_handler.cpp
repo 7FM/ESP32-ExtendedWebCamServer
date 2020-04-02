@@ -1,5 +1,3 @@
-#pragma once
-
 #include "esp_camera.h"
 #include "esp_http_server.h"
 #include "img_converters.h"
@@ -8,6 +6,7 @@
 // Local files
 #include "avi_helper.hpp"
 #include "makros.h"
+#include "lapse_handler.hpp"
 
 //FreeRTOS
 #include "freertos/FreeRTOS.h"
@@ -20,6 +19,14 @@
 // Include the config
 #include "config.h"
 
+#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
+#include "esp32-hal-log.h"
+#define TAG ""
+#else
+#include "esp_log.h"
+static const char *TAG = "timelapse";
+#endif
+
 // Makros
 #define TIMER_GROUP_NUM(x) (x == 0 ? TIMER_GROUP_0 : TIMER_GROUP_1)
 #define TIMER_NUM(x) (x == 0 ? TIMER_0 : TIMER_1)
@@ -27,13 +34,7 @@
 #define _CAM_TASK_TIMER_GROUP_NUM TIMER_GROUP_NUM(CAM_TASK_TIMER_GROUP_NUM)
 #define _CAM_TASK_TIMER_NUM TIMER_NUM(CAM_TASK_TIMER_NUM)
 
-#ifndef TIMER_DIVIDER
-#define TIMER_DIVIDER 65536 //Range is 2 to 65536
-#endif
-
 #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // convert counter value to seconds
-
-#define JPG_QUALITY 80
 
 bool lapseRunning = false;
 // 2 FPS in the resulting video
@@ -86,13 +87,13 @@ static void cameraTaskRoutine(void *arg) {
         if (ulTaskNotifyTake(pdTRUE, xMaxBlockTime)) {
             camera_fb_t *fb = esp_camera_fb_get();
             if (!fb) {
-                Serial.println("Camera capture failed!");
+                ESP_LOGE(TAG,"Camera capture failed!");
                 break;
             }
             if (xQueueSend(frameQueue, &fb, xMaxBlockTime >> 1) == pdFALSE) {
                 ++framesTaken;
             } else {
-                Serial.println("WARNING: frame queue is full!");
+                ESP_LOGW(TAG, "frame queue is full!");
                 // Return buffer and wait for next timer call
                 esp_camera_fb_return(fb);
             }
@@ -116,7 +117,7 @@ static void aviTaskRoutine(void *arg) {
             if (fb->format != PIXFORMAT_JPEG) {
                 needsFree = frame2jpg(fb, JPG_QUALITY, &_jpg_buf, &_jpg_buf_len);
                 if (!needsFree) {
-                    Serial.println("JPEG compression failed!");
+                    ESP_LOGE(TAG, "JPEG compression failed!");
                     goto return_fb;
                 }
             } else {
@@ -169,7 +170,7 @@ static inline void stopTimer() {
     timer_disable_intr(_CAM_TASK_TIMER_GROUP_NUM, _CAM_TASK_TIMER_NUM);
 }
 
-static inline int handleLapse(sensor_t *s, int lapse) {
+int handleLapse(sensor_t *s, int lapse) {
     bool wantsLapseStart = lapse ? true : false;
 
     // If wanted state is already actual state we are out of state sync!

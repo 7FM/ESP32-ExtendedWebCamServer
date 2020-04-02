@@ -1,20 +1,19 @@
-#pragma once
-
 #include "esp_http_server.h"
 #include <dirent.h>
 #include <sys/stat.h>
 
 // Local files
 #include "makros.h"
-#include "web_utils.hpp"
+#include "web_utils.h"
+#include "fs_browser.h"
 
 static inline bool isDir(struct dirent *entry) {
     return entry->d_type == DT_DIR;
 }
-
+/*
 static inline bool isDir(struct stat *file_stat) {
     return S_ISDIR(file_stat->st_mode);
-}
+}*/
 
 #define DIR_TYPE 2
 #define FILE_TYPE 1
@@ -27,7 +26,7 @@ static inline int getType(char *absolutePath) {
         return NONE_TYPE;
     }
 
-    return isDir(&file_stat) ? DIR_TYPE : FILE_TYPE;
+    return S_ISDIR(file_stat.st_mode) ? DIR_TYPE : FILE_TYPE;
 }
 
 static inline bool listDirectory(const char *absolutePath, bool (*callback)(const char * /*entryName*/, bool /*isDirectory*/, void * /*arg*/), void *arg) {
@@ -60,30 +59,20 @@ static bool handleFSEntry(const char *name, bool isDir, void *arg) {
 }
 
 static esp_err_t filesystem_handler(httpd_req_t *req) {
-    char *buf;
-
-    size_t buf_len = httpd_req_get_url_query_len(req) + 1;
 
     //TODO adjustable?
     char filepath[256];
 
-    if (buf_len > 1) {
-        buf = (char *)malloc(buf_len);
-        if (!buf) {
-            httpd_resp_send_500(req);
-            return ESP_FAIL;
-        }
-        if (httpd_req_get_url_query_str(req, buf, buf_len) != ESP_OK ||
-            httpd_query_key_value(buf, "path", filepath, sizeof(filepath)) != ESP_OK) {
-            free(buf);
-            httpd_resp_send_404(req);
-            return ESP_FAIL;
-        }
+    char *buf = NULL;
+    if (parse_get(req, &buf) != ESP_OK) {
+        return ESP_FAIL;
+    }
+    if (httpd_query_key_value(buf, "path", filepath, sizeof(filepath)) != ESP_OK) {
         free(buf);
-    } else {
         httpd_resp_send_404(req);
         return ESP_FAIL;
     }
+    free(buf);
 
     if (!urldecode(filepath, strlen(filepath))) {
         httpd_resp_send_404(req);
@@ -143,7 +132,7 @@ static esp_err_t filesystem_handler(httpd_req_t *req) {
     return res;
 }
 
-inline void registerFSHandler(httpd_handle_t camera_httpd) {
+void registerFSHandler(httpd_handle_t camera_httpd) {
 
     httpd_uri_t fs_uri = {.uri = "/fs",
                           .method = HTTP_GET,
