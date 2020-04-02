@@ -65,6 +65,7 @@ void checkForOTA(const char *firmware_upgrade_url, int ota_recv_timeout, const c
             err = ESP_FAIL;
             ESP_LOGI(TAG, "ESP_HTTPS_OTA no update needed!");
         } else {
+            ESP_LOGI(TAG, "Starting OTA Update!");
 
             while (1) {
                 err = esp_https_ota_perform(https_ota_handle);
