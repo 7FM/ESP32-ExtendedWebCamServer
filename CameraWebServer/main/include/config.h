@@ -57,7 +57,7 @@
 #define FALLBACK_AP_IP_ADDR ""
 #endif
 #ifndef FALLBACK_DEVICE_NAME
-#define FALLBACK_DEVICE_NAME ""
+#define FALLBACK_DEVICE_NAME "SPYCAM"
 #endif
 
 // Flash LED Options: //TODO update/add

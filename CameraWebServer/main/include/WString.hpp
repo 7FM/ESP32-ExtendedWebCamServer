@@ -4,18 +4,15 @@
 
 class String {
   public:
-    String() {
-        this->_length = 0;
-        this->_size = 64;
-        this->_string = new char[64];
-    }
-
     String(const char *str, int length) {
         this->_length = length;
         this->_size = this->_length + 1;
         this->_string = new char[this->_size];
         this->_string[this->_length] = '\0';
         memcpy(this->_string, str, length);
+    }
+
+    String() : String("", 0) {
     }
 
     String(const char *str) : String(str, strlen(str)) {
@@ -40,11 +37,10 @@ class String {
     String &operator=(const String &str) {
         if (this != &str) {
             this->_length = str._length;
-            if (this->_size <= str._length) {
-                delete[] this->_string;
-                this->_size = str._size;
-                this->_string = new char[this->_size];
-            }
+
+            delete[] this->_string;
+            this->_size = str._size;
+            this->_string = new char[this->_size];
 
             memcpy(this->_string, str._string, str._length + 1);
         }

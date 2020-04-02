@@ -17,7 +17,7 @@ static inline void removeStringChars(char **strPtr) {
     maxReadSize is the buffer size - 1 so that \0 can still be appended
 */
 static inline bool getLine(FILE *file, String &buffer, char *buf, int maxReadSize, String &line) {
-    size_t pos;
+    int pos;
     int n;
 
     while ((pos = buffer.indexOf('\n')) == -1) {
