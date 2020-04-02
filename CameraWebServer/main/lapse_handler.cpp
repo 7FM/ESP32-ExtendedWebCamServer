@@ -284,16 +284,30 @@ void lapseHandlerSetup() {
         NULL,
         1,
         &cameraTask,
-        tskNO_AFFINITY);
+#if CAM_FETCH_TASK_CORE0
+        0
+#elif CAM_FETCH_TASK_CORE1
+        1
+#else
+        -1
+#endif
+    );
 
     xTaskCreatePinnedToCore(
         aviTaskRoutine,
         "AVI_Task",
         2048,
         NULL,
-        2,
+        3,
         &aviTask,
-        tskNO_AFFINITY);
+#if AVI_TASK_CORE0
+        0
+#elif AVI_TASK_CORE1
+        1
+#else
+        -1
+#endif
+    );
 
     vTaskSuspend(cameraTask);
     vTaskSuspend(aviTask);

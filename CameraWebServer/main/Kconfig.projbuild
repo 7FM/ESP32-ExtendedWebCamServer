@@ -300,4 +300,86 @@ menu "CameraWebServer Parameters"
 
     endmenu
 
+    menu "Task Affinities & Priorites"
+
+        menu "Timelapse Tasks"
+            choice AVI_TASK_PINNED_TO_CORE
+                bool "AVI file write task pinned to core"
+                default AVI_TASK_CORE0
+                help
+                    Pin the AVI file writer task to a certain core(0/1). It can also be done automatically choosing NO_AFFINITY.
+
+                config AVI_TASK_CORE0
+                    bool "CORE0"
+                config AVI_TASK_CORE1
+                    bool "CORE1"
+                config AVI_TASK_NO_AFFINITY
+                    bool "NO_AFFINITY"
+            endchoice
+
+            choice CAM_FETCH_TASK_PINNED_TO_CORE
+                bool "Camera frame fetch task pinned to core"
+                default CAM_FETCH_TASK_CORE1
+                help
+                    Pin the camera frame fetcher task to a certain core(0/1). It can also be done automatically choosing NO_AFFINITY.
+
+                config CAM_FETCH_TASK_CORE0
+                    bool "CORE0"
+                config CAM_FETCH_TASK_CORE1
+                    bool "CORE1"
+                config CAM_FETCH_TASK_NO_AFFINITY
+                    bool "NO_AFFINITY"
+            endchoice
+
+        endmenu
+
+        menu "HTTP Server Tasks"
+            choice HTTP_CONTROL_TASK_PINNED_TO_CORE
+                bool "Normal HTTP Server task pinned to core"
+                default HTTP_CONTROL_TASK_CORE1
+                help
+                    Pin the HTTP control task to a certain core(0/1). It can also be done automatically choosing NO_AFFINITY.
+
+                config HTTP_CONTROL_TASK_CORE0
+                    bool "CORE0"
+                config HTTP_CONTROL_TASK_CORE1
+                    bool "CORE1"
+                config HTTP_CONTROL_TASK_NO_AFFINITY
+                    bool "NO_AFFINITY"
+            endchoice
+
+            choice HTTP_STREAM_TASK_PINNED_TO_CORE
+                bool "Camera frame fetch task pinned to core"
+                default HTTP_STREAM_TASK_CORE0
+                help
+                    Pin the HTTP stream task to a certain core(0/1). It can also be done automatically choosing NO_AFFINITY.
+
+                config HTTP_STREAM_TASK_CORE0
+                    bool "CORE0"
+                config HTTP_STREAM_TASK_CORE1
+                    bool "CORE1"
+                config HTTP_STREAM_TASK_NO_AFFINITY
+                    bool "NO_AFFINITY"
+            endchoice
+
+        endmenu
+
+        menu "MDNS Tasks"
+            choice MDNS_TASK_PINNED_TO_CORE
+                bool "MDNS task pinned to core"
+                default MDNS_TASK_CORE0
+                help
+                    Pin the MDNS task to a certain core(0/1). It can also be done automatically choosing NO_AFFINITY.
+
+                config MDNS_TASK_CORE0
+                    bool "CORE0"
+                config MDNS_TASK_CORE1
+                    bool "CORE1"
+                config MDNS_TASK_NO_AFFINITY
+                    bool "NO_AFFINITY"
+            endchoice
+
+        endmenu
+    endmenu
+
 endmenu

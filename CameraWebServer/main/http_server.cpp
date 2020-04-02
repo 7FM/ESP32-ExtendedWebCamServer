@@ -498,6 +498,14 @@ void startCameraServer() {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 9;
 
+#if HTTP_CONTROL_TASK_CORE0
+    config.core_id = 0;
+#elif HTTP_CONTROL_TASK_CORE1
+    config.core_id = 1;
+#else
+    config.core_id = -1;
+#endif
+
     httpd_uri_t index_uri = {
         .uri = "/",
         .method = HTTP_GET,
@@ -570,6 +578,14 @@ void startCameraServer() {
         httpd_register_uri_handler(camera_httpd, &mdns_uri);
         httpd_register_uri_handler(camera_httpd, &monitor_uri);
     }
+
+#if HTTP_STREAM_TASK_CORE0
+    config.core_id = 0;
+#elif HTTP_STREAM_TASK_CORE1
+    config.core_id = 1;
+#else
+    config.core_id = -1;
+#endif
 
     config.server_port += 1;
     config.ctrl_port += 1;

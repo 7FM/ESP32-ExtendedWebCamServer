@@ -170,7 +170,7 @@ void app_mdns_update_framesize(int size) {
     }
 }
 
-int initMDNS(const char* devName, int wifiSTAMode) {
+int initMDNS(const char *devName, int wifiSTAMode) {
     _wifiSTAMode = wifiSTAMode;
     uint8_t mac[6];
 
@@ -255,7 +255,21 @@ int initMDNS(const char* devName, int wifiSTAMode) {
         return -1;
     }
 
-    xTaskCreate(mdns_task, "mdns-cam", 2048, NULL, 2, NULL);
+    xTaskCreatePinnedToCore(
+        mdns_task,
+        "mdns-cam",
+        2048,
+        NULL,
+        2,
+        NULL,
+#if MDNS_TASK_CORE0
+        0
+#elif MDNS_TASK_CORE1
+        1
+#else
+        -1
+#endif
+    );
 
     return 0;
 }
