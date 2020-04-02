@@ -665,7 +665,7 @@
           <section id="buttons">
             <button id="get-still">Get Still</button>
             <button id="toggle-stream" class="disableOnLapse">Start Stream</button>
-            <button id="face_enroll" class="disabled" disabled="disabled">Enroll Face</button>
+            <button id="lapse-running" class="disabled">Start Lapse</button>
           </section>
           <section id="custom-actions">
             <button id="check-update" class="hidden">Check for Update</button>
@@ -773,58 +773,58 @@
     </div>
   </section>
   <script>
-
+    /*jshint esversion: 6 */
     function renderFiles(files, path) {
-      var r = new Array()
-      j = -1
+      let r = [];
+      let j = -1;
       for (var key = 0, size = files.length; key < size; key++) {
-        r[++j] = '<tr><td><a onclick="onFileClick(this)" is_dir="'
-        r[++j] = files[key]['is_dir']
-        r[++j] = '" path="'
+        r[++j] = '<tr><td><a onclick="onFileClick(this)" is_dir="';
+        r[++j] = files[key].is_dir;
+        r[++j] = '" path="';
         if (path && path !== "") {
-          r[++j] = path
-          r[++j] = '/'
+          r[++j] = path;
+          r[++j] = '/';
         }
-        r[++j] = files[key]['name']
-        r[++j] = '">'
-        if (files[key]['is_dir']) {
-          r[++j] = '<svg aria-hidden="true" focusable="false" class="icon"><use xlink:href="#folder"></use></svg>'
+        r[++j] = files[key].name;
+        r[++j] = '">';
+        if (files[key].is_dir) {
+          r[++j] = '<svg aria-hidden="true" focusable="false" class="icon"><use xlink:href="#folder"></use></svg>';
         }
-        r[++j] = files[key]['name']
-        r[++j] = '</a></td></tr>'
+        r[++j] = files[key].name;
+        r[++j] = '</a></td></tr>';
       }
       if (files.length <= 1) {
-        r[++j] = '<tr><td>No Files!</td></tr>'
+        r[++j] = '<tr><td>No Files!</td></tr>';
       }
-      document.getElementById('files-table-body').innerHTML = r.join('')
+      document.getElementById('files-table-body').innerHTML = r.join('');
     }
 
     function updateFileBrowser(path = "") {
       // get file structure
       fetch(`${document.location.origin}/fs?path=${encodeURIComponent(path)}`)
         .then(function (response) {
-          return response.json()
+          return response.json();
         })
         .then(function (files) {
-          renderFiles(files, path)
-        })
+          renderFiles(files, path);
+        });
     }
 
     function onFileClick(el) {
       if (el.hasAttribute('is_dir') && el.hasAttribute('path')) {
-        var path = el.getAttribute('path')
+        var path = el.getAttribute('path');
         if (el.getAttribute('is_dir') === "true") {
-          var lastIndex = path.lastIndexOf("..")
+          var lastIndex = path.lastIndexOf("..");
           if (lastIndex != -1) {
-            path = path.substring(0, lastIndex)
+            path = path.substring(0, lastIndex);
             if (path.length > 0) {
-              path = path.substring(0, path.length - 1)
+              path = path.substring(0, path.length - 1);
             }
             lastIndex = path.lastIndexOf("/");
             if (lastIndex != -1) {
-              path = path.substring(0, lastIndex)
+              path = path.substring(0, lastIndex);
             } else {
-              path = ""
+              path = "";
             }
           }
           updateFileBrowser(path);
@@ -835,8 +835,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function (event) {
-      var baseHost = document.location.origin
-      var streamUrl = baseHost + ':81'
+      var baseHost = document.location.origin;
+      var streamUrl = baseHost + ':81';
 
       function fetchUrl(url, cb) {
         fetch(url)
@@ -864,7 +864,7 @@
         fetchUrl(`${baseHost}/resolution?sx=${start_x}&sy=${start_y}&ex=${end_x}&ey=${end_y}&offx=${offset_x}&offy=${offset_y}&tx=${total_x}&ty=${total_y}&ox=${output_x}&oy=${output_y}&scale=${scaling}&binning=${binning}`, cb);
       }
 
-      const setXclkButton = document.getElementById('set-xclk')
+      const setXclkButton = document.getElementById('set-xclk');
       setXclkButton.onclick = () => {
         let xclk = parseInt(document.getElementById('xclk').value);
 
@@ -873,9 +873,9 @@
             alert('Error[' + code + ']: ' + txt);
           }
         });
-      }
+      };
 
-      const setResButton = document.getElementById('set-resolution')
+      const setResButton = document.getElementById('set-resolution');
       setResButton.onclick = () => {
         let start_x = parseInt(document.getElementById('start-x').value);
         let start_y = parseInt(document.getElementById('start-y').value);
@@ -895,104 +895,112 @@
             alert('Error[' + code + ']: ' + txt);
           }
         });
-      }
+      };
 
       const hide = el => {
-        el.classList.add('hidden')
-      }
+        el.classList.add('hidden');
+      };
       const show = el => {
-        el.classList.remove('hidden')
-      }
+        el.classList.remove('hidden');
+      };
 
       const disable = el => {
-        el.classList.add('disabled')
-        el.disabled = true
-      }
+        el.classList.add('disabled');
+        el.disabled = true;
+      };
 
       const enable = el => {
-        el.classList.remove('disabled')
-        el.disabled = false
-      }
+        el.classList.remove('disabled');
+        el.disabled = false;
+      };
 
       const updateValue = (el, value, updateRemote) => {
-        updateRemote = updateRemote == null ? true : updateRemote
-        let initialValue
+        updateRemote = updateRemote === null ? true : updateRemote;
+        let initialValue;
         if (el.type === 'checkbox') {
-          initialValue = el.checked
-          value = !!value
-          el.checked = value
+          initialValue = el.checked;
+          value = !!value;
+          el.checked = value;
         } else {
-          initialValue = el.value
-          el.value = value
+          initialValue = el.value;
+          el.value = value;
         }
 
         if (updateRemote && initialValue !== value) {
           updateConfig(el);
         } else if (!updateRemote) {
           if (el.id === "aec") {
-            value ? hide(exposure) : show(exposure)
+            if (value) {
+              hide(exposure);
+            } else {
+              show(exposure);
+            }
           } else if (el.id === "agc") {
             if (value) {
-              //show(gainCeiling)
-              hide(agcGain)
+              //show(gainCeiling);
+              hide(agcGain);
             } else {
-              //hide(gainCeiling)
-              show(agcGain)
+              //hide(gainCeiling);
+              show(agcGain);
             }
           } else if (el.id === "awb_gain") {
-            value ? show(wb) : hide(wb)
+            if (value) {
+              show(wb);
+            } else {
+              hide(wb);
+            }
           }
         }
-      }
+      };
 
       function updateConfig(el) {
-        let value
+        let value;
         switch (el.type) {
           case 'checkbox':
-            value = el.checked ? 1 : 0
-            break
+            value = el.checked ? 1 : 0;
+            break;
           case 'range':
           case 'select-one':
-            value = el.value
-            break
+            value = el.value;
+            break;
           case 'button':
           case 'submit':
-            value = '1'
-            break
+            value = '1';
+            break;
           default:
-            return
+            return;
         }
 
-        const query = `${baseHost}/control?var=${el.id}&val=${value}`
+        const query = `${baseHost}/control?var=${el.id}&val=${value}`;
 
         fetch(query)
           .then(response => {
-            console.log(`request to ${query} finished, status: ${response.status}`)
-          })
+            console.log(`request to ${query} finished, status: ${response.status}`);
+          });
       }
 
       document
         .querySelectorAll('.close')
         .forEach(el => {
           el.onclick = () => {
-            hide(el.parentNode)
-          }
-        })
+            hide(el.parentNode);
+          };
+        });
 
-      const lapseButton = document.getElementById('lapse-running')
-      const otaUpdateCheck = document.getElementById('check-update')
-      const view = document.getElementById('stream')
-      const viewContainer = document.getElementById('stream-container')
-      const stillButton = document.getElementById('get-still')
-      const streamButton = document.getElementById('toggle-stream')
-      const closeButton = document.getElementById('close-stream')
+      const lapseButton = document.getElementById('lapse-running');
+      const otaUpdateCheck = document.getElementById('check-update');
+      const view = document.getElementById('stream');
+      const viewContainer = document.getElementById('stream-container');
+      const stillButton = document.getElementById('get-still');
+      const streamButton = document.getElementById('toggle-stream');
+      const closeButton = document.getElementById('close-stream');
       const saveButton = document.getElementById('save-still');
 
       function updateLapseState(state) {
         if (state) {
-          lapseButton.innerHTML = 'Stop Lapse'
+          lapseButton.innerHTML = 'Stop Lapse';
         } else {
-          lapseButton.innerHTML = 'Start Lapse'
+          lapseButton.innerHTML = 'Start Lapse';
         }
         document
           .querySelectorAll('disableOnLapse')
@@ -1002,69 +1010,69 @@
             } else {
               enable(el);
             }
-          })
+          });
       }
 
       // read initial values
       fetch(`${baseHost}/status`)
         .then(function (response) {
-          return response.json()
+          return response.json();
         })
         .then(function (state) {
           document
             .querySelectorAll('.default-action')
             .forEach(el => {
-              updateValue(el, state[el.id], false)
-            })
+              updateValue(el, state[el.id], false);
+            });
 
           if (state['sd-avail']) {
-            enable(lapseButton)
+            enable(lapseButton);
             updateLapseState(state[lapseButton.id]);
           } else {
-            disable(lapseButton)
+            disable(lapseButton);
           }
           if (state[otaUpdateCheck.id]) {
-            show(otaUpdateCheck)
+            show(otaUpdateCheck);
           }
-        })
+        });
 
       updateFileBrowser();
 
       const stopStream = () => {
-        window.stop()
-        streamButton.innerHTML = 'Start Stream'
-        hide(viewContainer)
-      }
+        window.stop();
+        streamButton.innerHTML = 'Start Stream';
+        hide(viewContainer);
+      };
 
       const startStream = () => {
-        view.src = `${streamUrl}/stream`
-        show(viewContainer)
-        streamButton.innerHTML = 'Stop Stream'
-      }
+        view.src = `${streamUrl}/stream`;
+        show(viewContainer);
+        streamButton.innerHTML = 'Stop Stream';
+      };
 
       // Attach actions to buttons
       stillButton.onclick = () => {
         if (!stillButton.classList.contains('disabled')) {
-          stopStream()
-          view.src = `${baseHost}/capture?_cb=${Date.now()}`
-          show(viewContainer)
+          stopStream();
+          view.src = `${baseHost}/capture?_cb=${Date.now()}`;
+          show(viewContainer);
         }
-      }
+      };
 
       closeButton.onclick = () => {
-        stopStream()
-      }
+        stopStream();
+      };
 
       streamButton.onclick = () => {
         if (!streamButton.classList.contains('disabled')) {
-          const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+          const streamEnabled = streamButton.innerHTML === 'Stop Stream';
           if (streamEnabled) {
-            stopStream()
+            stopStream();
           } else {
-            startStream()
+            startStream();
           }
         }
-      }
+      };
 
       saveButton.onclick = () => {
         if (!saveButton.classList.contains('disabled')) {
@@ -1084,37 +1092,37 @@
           }
           canvas.parentNode.removeChild(canvas);
         }
-      }
+      };
 
       lapseButton.onclick = () => {
         if (!lapseButton.classList.contains('disabled')) {
-          const lapseEnabled = lapseButton.innerHTML === 'Start Lapse'
-          let value
+          const lapseEnabled = lapseButton.innerHTML === 'Start Lapse';
+          let value;
           if (lapseEnabled) {
-            value = 1
-            stopStream()
+            value = 1;
+            stopStream();
           } else {
-            value = 0
+            value = 0;
           }
 
           updateLapseState(lapseEnabled);
 
-          const query = `${baseHost}/control?var=${lapseButton.id}&val=${value}`
+          const query = `${baseHost}/control?var=${lapseButton.id}&val=${value}`;
 
           fetch(query)
             .then(response => {
-              console.log(`request to ${query} finished, status: ${response.status}`)
-            })
+              console.log(`request to ${query} finished, status: ${response.status}`);
+            });
         }
-      }
+      };
 
       otaUpdateCheck.onclick = () => {
-        const query = `${baseHost}/control?var=${otaUpdateCheck.id}&val=42`
+        const query = `${baseHost}/control?var=${otaUpdateCheck.id}&val=42`;
         fetch(query)
           .then(response => {
-            console.log(`request to ${query} finished, status: ${response.status}`)
-          })
-      }
+            console.log(`request to ${query} finished, status: ${response.status}`);
+          });
+      };
 
       // Attach default on change action
       document
@@ -1122,44 +1130,52 @@
         .forEach(el => {
           el.onchange = () => {
             if (!el.classList.contains('disabled')) {
-              updateConfig(el)
+              updateConfig(el);
             }
-          }
-        })
+          };
+        });
 
       // Custom actions
       // Gain
-      const agc = document.getElementById('agc')
-      const agcGain = document.getElementById('agc_gain-group')
-      //const gainCeiling = document.getElementById('gainceiling-group')
+      const agc = document.getElementById('agc');
+      const agcGain = document.getElementById('agc_gain-group');
+      //const gainCeiling = document.getElementById('gainceiling-group');
       agc.onchange = () => {
-        updateConfig(agc)
+        updateConfig(agc);
         if (agc.checked) {
-          //show(gainCeiling)
-          hide(agcGain)
+          //show(gainCeiling);
+          hide(agcGain);
         } else {
-          //hide(gainCeiling)
-          show(agcGain)
+          //hide(gainCeiling);
+          show(agcGain);
         }
-      }
+      };
 
       // Exposure
-      const aec = document.getElementById('aec')
-      const exposure = document.getElementById('aec_value-group')
+      const aec = document.getElementById('aec');
+      const exposure = document.getElementById('aec_value-group');
       aec.onchange = () => {
-        updateConfig(aec)
-        aec.checked ? hide(exposure) : show(exposure)
-      }
+        updateConfig(aec);
+        if (aec.checked) {
+          hide(exposure);
+        } else {
+          show(exposure);
+        }
+      };
 
       // AWB
-      const awb = document.getElementById('awb_gain')
-      const wb = document.getElementById('wb_mode-group')
+      const awb = document.getElementById('awb_gain');
+      const wb = document.getElementById('wb_mode-group');
       awb.onchange = () => {
-        updateConfig(awb)
-        awb.checked ? show(wb) : hide(wb)
-      }
+        updateConfig(awb);
+        if (awb.checked) {
+          show(wb);
+        } else {
+          hide(wb);
+        }
+      };
 
-    })
+    });
 
   </script>
 </body>

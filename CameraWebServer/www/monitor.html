@@ -275,6 +275,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
     }
   </style>
   <script type="text/javascript">
+    /*jshint esversion: 6 */
     /*
     *  Console
     */
@@ -283,7 +284,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
     }
 
     function isObject(a) {
-      return (typeof a === "object" && (a instanceof Array) == false);
+      return (typeof a === "object" && (a instanceof Array) === false);
     }
 
     function isFunction(a) {
@@ -467,7 +468,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
       function getCb(id) {
         return function () {
           loadCameraThumbnail(id);
-        }
+        };
       }
       function copyThumbnailFromPlayer(id) {
         let view = document.getElementById('stream');
@@ -551,7 +552,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
         }
         //clear all timeouts
         for (var cam in cameras) {
-          if (cameras[cam].timeout != null) {
+          if (cameras[cam].timeout !== null) {
             clearTimeout(cameras[cam].timeout);
             cameras[cam].timeout = null;
           }
@@ -579,7 +580,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
         gWarn("Remove Camera[" + id + "]: " + cameras[id].instance);
         item.parentElement.removeChild(item);
       }
-      if (cameras[id].timeout != null) {
+      if (cameras[id].timeout !== null) {
         clearTimeout(cameras[id].timeout);
         cameras[id].timeout = null;
       }
@@ -770,7 +771,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
         if (cameras.hasOwnProperty(id)) {
           onCameraButtonPlay(id);
         }
-      }
+      };
     }
 
     function onCameraButtonPlay(id) {
@@ -786,7 +787,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
       playing = true;
       playButton.onclick = function () {
         onCameraButtonStop(id);
-      }
+      };
     }
 
     function selectCamera(id) {
@@ -826,7 +827,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
             playButton.onclick = function () {
               onCameraButtonPlay(id);
             };
-          } else if (selectedCamera != null) {
+          } else if (selectedCamera !== null) {
             removeCamera(selectedCamera);
           }
         });
@@ -841,11 +842,11 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
         }
         let url = getCamURL(selectedCamera);
         fetchUrl(`${url}/control?var=framesize&val=${e.target.value}`, 'text', function (code) {
-          if (code < 0 && selectedCamera != null) {
+          if (code < 0 && selectedCamera !== null) {
             removeCamera(selectedCamera);
           }
         });
-      }
+      };
       //XCLK
       document.getElementById("xclk").onchange = function (e) {
         if (selectedCamera === null) {
@@ -858,11 +859,11 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
         }
         let url = getCamURL(selectedCamera);
         fetchUrl(`${url}/xclk?xclk=${value}`, 'text', function (code) {
-          if (code < 0 && selectedCamera != null) {
+          if (code < 0 && selectedCamera !== null) {
             removeCamera(selectedCamera);
           }
         });
-      }
+      };
       //Save Image
       const saveButton = document.getElementById('save-still');
       saveButton.onclick = (e) => {
@@ -882,7 +883,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
           gException(e);
         }
         canvas.parentNode.removeChild(canvas);
-      }
+      };
     }
 
     /*
@@ -898,7 +899,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
             for (var i = 0; i < data.length; i++) {
               handleCamera(data[i]);
             }
-            if (data.length > 0 && selectedCamera == null) {
+            if (data.length > 0 && selectedCamera === null) {
               selectCamera(data[0].id);
             }
           } else {
@@ -959,7 +960,6 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
       initCameraPlayerControls();
       initCamSwitcher();
     });
-
   </script>
   <title>ESP-EYE Monitor</title>
 </head>
