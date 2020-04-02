@@ -27,10 +27,6 @@ static const char *TAG = "camera main";
 
 #include "ota_handler.h"
 
-#define MAX_OPTION_NAMES 7
-
-#else
-#define MAX_OPTION_NAMES 5
 #endif
 
 static const char *OPTION_NAMES[] = {
