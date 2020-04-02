@@ -160,6 +160,7 @@ extern "C" void app_main() {
         ESP_LOGE(TAG, "Card Mount Failed");
         SDCardAvailable = false;
     } else {
+        SDCardAvailable = true;
 
 #ifdef OTA_FEATURE
         String *const parameters[] = {&ssid, &pwd, &ap_ssid, &ap_pwd, &ap_ip_addr, &devName, &hMirror, &vFlip, &firmwareUpgradeURL, &otaCertPath};
