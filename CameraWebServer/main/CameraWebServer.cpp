@@ -27,9 +27,6 @@ static const char *TAG = "camera main";
 
 #include "ota_handler.h"
 
-extern const uint8_t ota_server_ca_pem_start[] asm("_binary_ota_server_ca_pem_start");
-//extern const uint8_t ota_server_pem_end[] asm("_binary_ota_server_ca_pem_end");
-
 #define MAX_OPTION_NAMES 7
 
 #else
@@ -45,12 +42,6 @@ static const char *OPTION_NAMES[] = {
     "Password",
     "Passwort",
     "pwd",
-    // Devive Name
-    "devname",
-    "devName",
-    "dev_name",
-    "deviceName",
-    "device_name",
     // AP SSID
     "AP_SSID",
     "ap_ssid",
@@ -115,6 +106,10 @@ static int OPTION_NAME_LENGTHS[] = {
 bool SDCardAvailable = false;
 
 #ifdef OTA_FEATURE
+
+extern const uint8_t ota_server_ca_pem_start[] asm("_binary_ota_server_ca_pem_start");
+//extern const uint8_t ota_server_pem_end[] asm("_binary_ota_server_ca_pem_end");
+
 static String firmwareUpgradeURL(FALLBACK_FIRMWARE_UPGRADE_URL);
 
 void checkForUpdate() {
