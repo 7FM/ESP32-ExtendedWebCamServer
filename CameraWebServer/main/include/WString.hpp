@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdlib.h>
 #include <string.h>
 
 class String {
@@ -7,7 +8,7 @@ class String {
     String(const char *str, int length) {
         this->_length = length;
         this->_size = this->_length + 1;
-        this->_string = new char[this->_size];
+        this->_string = (char *)malloc(this->_size);
         this->_string[this->_length] = '\0';
         memcpy(this->_string, str, length);
     }
@@ -18,29 +19,25 @@ class String {
     String(const char *str) : String(str, strlen(str)) {
     }
 
-    String(const String &str) {
-        this->_length = str._length;
-        this->_size = str._size;
-        this->_string = new char[this->_size];
-        memcpy(this->_string, str._string, this->_size);
+    String(const String &str) : String(str._string, str._length) {
     }
 
     ~String() {
-        if (this->_string != NULL) {
-            delete[] this->_string;
-            this->_string = NULL;
-            this->_length = 0;
-            this->_size = 0;
-        }
+        free(this->_string);
+        this->_string = NULL;
+        this->_length = 0;
+        this->_size = 0;
     }
 
     String &operator=(const String &str) {
         if (this != &str) {
             this->_length = str._length;
 
-            delete[] this->_string;
-            this->_size = str._size;
-            this->_string = new char[this->_size];
+            if (this->_length >= this->_size) {
+                free(this->_string);
+                this->_size = str._size;
+                this->_string = (char *)malloc(this->_size);
+            }
 
             memcpy(this->_string, str._string, str._length + 1);
         }
@@ -53,11 +50,15 @@ class String {
         this->_length = this->_length + str._length;
         this->_size = this->_length + 1;
 
-        char *buffer = new char[this->_size];
-        memcpy(buffer, this->_string, oldLength);
+        char *buffer = (char *)realloc(this->_string, this->_size);
+
+        if (buffer == NULL) {
+            buffer = (char *)malloc(this->_size);
+            memcpy(buffer, this->_string, oldLength);
+            free(this->_string);
+        }
         memcpy(buffer + oldLength, str._string, str._length + 1);
 
-        delete[] this->_string;
         this->_string = buffer;
 
         return *this;
