@@ -3,6 +3,9 @@
 #include "esp_camera.h"
 #include "esp_vfs_fat.h"
 
+//FreeRTOS
+#include "freertos/task.h"
+
 // Include the config
 #include "config.h"
 
@@ -195,31 +198,41 @@ extern "C" void app_main() {
     }
 
 #ifdef OTA_FEATURE
-    //TODO wait until connected
-    checkForUpdate();
+    if (isWiFiSTAMode) {
+        int i = 0;
+        do {
+            // Wait for 1s
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            ESP_LOGI(TAG, "Wait until connected to wifi since %ds", i);
+            ++i;
+            if (i >= 10) {
+                if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str())) {
+                    return;
+                }
+                i = 0;
+            }
+        } while (!isConnectedToWiFi);
+
+        checkForUpdate();
+    }
 #endif
 
     initMDNS(devName.c_str(), ssid.length());
 
     startCameraServer();
 
-    //TODO reimplement reconnect
-    /*
-    for (;;) {
-        if (WiFi.status() != WL_CONNECTED) {
-
-            ESP_LOGI(TAG, "***** WiFi reconnect *****");
-            WiFi.reconnect();
-            delay(10000);
-
-            if (WiFi.status() != WL_CONNECTED) {
+    if (isWiFiSTAMode) {
+        for (;;) {
+            if (!isConnectedToWiFi) {
                 ESP_LOGI(TAG, "***** WiFi restart *****");
-                initWifi(ssid.c_str(), password.c_str(), devName.c_str());
-            }
-        }
 
-        // Wait for 60s
-        delay(60000);
+                if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str())) {
+                    return;
+                }
+            }
+
+            // Wait for 60s
+            vTaskDelay(60000 / portTICK_PERIOD_MS);
+        }
     }
-    */
 }
