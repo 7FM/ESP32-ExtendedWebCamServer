@@ -398,7 +398,6 @@ static esp_err_t mdns_handler(httpd_req_t *req) {
     return httpd_resp_send(req, json_response, json_len);
 }
 
-//TODO remove?
 static esp_err_t xclk_handler(httpd_req_t *req) {
     char *buf = NULL;
     char _xclk[32];
@@ -593,7 +592,7 @@ void startCameraServer() {
 
     config.server_port += 1;
     config.ctrl_port += 1;
-    config.stack_size = 2048;
+    config.stack_size = 3072;
     config.max_uri_handlers = 1;
     ESP_LOGI(TAG, "Starting stream server on port: '%d'\n", config.server_port);
     if (httpd_start(&stream_httpd, &config) == ESP_OK) {

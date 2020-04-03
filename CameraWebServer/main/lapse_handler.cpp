@@ -55,16 +55,9 @@ static FILE *indexFile = NULL;
 static size_t aviWriteOffset;
 
 static IRAM_ATTR void timerISR(void *arg) {
-    // Take lock //TODO needed??
-    //timer_spinlock_take(_CAM_TASK_TIMER_GROUP_NUM);
-
     // Clear the interrupt status and enable arlam again
     timer_group_clr_intr_status_in_isr(_CAM_TASK_TIMER_GROUP_NUM, _CAM_TASK_TIMER_NUM);
     timer_group_enable_alarm_in_isr(_CAM_TASK_TIMER_GROUP_NUM, _CAM_TASK_TIMER_NUM);
-
-    // Release lock
-    //TODO needed?? and if so where??
-    //timer_spinlock_give(_CAM_TASK_TIMER_GROUP_NUM);
 
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
@@ -110,7 +103,7 @@ static void aviTaskRoutine(void *arg) {
 
     for (;;) {
         camera_fb_t *fb;
-        if (xQueueReceive(frameQueue, &fb, xMaxBlockTime)) {
+        if (xQueueReceive(frameQueue, &fb, xMaxBlockTime) == pdTRUE) {
             size_t _jpg_buf_len = 0;
             uint8_t *_jpg_buf = NULL;
 
@@ -144,7 +137,6 @@ static void aviTaskRoutine(void *arg) {
 }
 
 static inline void startTimer() {
-
     timer_config_t config;
     memset(&config, 0, sizeof(config));
 
