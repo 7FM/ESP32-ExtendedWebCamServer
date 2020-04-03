@@ -37,7 +37,7 @@ static const char *TAG = "timelapse";
 
 #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // convert counter value to seconds
 
-bool lapseRunning = false;
+volatile bool lapseRunning = false;
 // 2 FPS in the resulting video
 size_t videoFPS = 2;
 // Take a picture every second

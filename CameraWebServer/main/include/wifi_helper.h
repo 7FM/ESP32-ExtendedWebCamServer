@@ -30,6 +30,9 @@ extern "C" {
 
 int initWifi(const char *ssid, const char *pwd, const char *ap_ssid, const char *ap_pwd, const char *ap_ip_addr);
 
+extern volatile int isWiFiSTAMode;
+extern volatile int isConnectedToWiFi;
+
 #ifdef __cplusplus
 }
 #endif

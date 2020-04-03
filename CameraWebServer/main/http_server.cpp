@@ -53,16 +53,11 @@ static const char *TAG = "camera_httpd";
 
 // External status variables
 extern bool SDCardAvailable;
-extern bool lapseRunning;
-// 2 FPS in the resulting video
-extern size_t videoFPS;
-// Take a picture every second
-extern size_t millisBetweenSnapshots;
+extern volatile int isWiFiSTAMode;
 
 // Local status variables
 static int camLEDStatus = 0;
 static int useFlash = 0;
-
 static int led_duty = 255;
 static bool isStreaming = false;
 
@@ -371,7 +366,7 @@ static esp_err_t status_handler(httpd_req_t *req) {
     p += sprintf(p, "\"frame_delay\":%u,", millisBetweenSnapshots);
     p += sprintf(p, "\"video_fps\":%u,", videoFPS);
 #ifdef OTA_FEATURE
-    p += sprintf(p, "\"check-update\":true");
+    p += sprintf(p, "\"check-update\":%s", BOOL_TO_STR(isWiFiSTAMode));
 #else
     p += sprintf(p, "\"check-update\":false");
 #endif
