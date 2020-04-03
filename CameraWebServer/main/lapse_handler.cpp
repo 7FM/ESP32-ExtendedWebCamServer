@@ -92,7 +92,7 @@ static void cameraTaskRoutine(void *arg) {
                 ESP_LOGE(TAG, "Camera capture failed!");
                 break;
             }
-            if (xQueueSend(frameQueue, &fb, xMaxBlockTime >> 1) == pdFALSE) {
+            if (xQueueSend(frameQueue, &fb, xMaxBlockTime) == pdTRUE) {
                 ++framesTaken;
             } else {
                 ESP_LOGW(TAG, "frame queue is full!");
