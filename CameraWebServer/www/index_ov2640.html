@@ -280,6 +280,39 @@
       background: #363636
     }
 
+    .range-wrap {
+      position: relative;
+    }
+
+    .range-value {
+      position: absolute;
+    }
+
+    .range-value span {
+      width: 30px;
+      height: 24px;
+      line-height: 24px;
+      text-align: center;
+      background: transparent;
+      color: #fff;
+      font-size: 12px;
+      display: block;
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, 0%);
+      border-radius: 6px;
+    }
+
+    .unselectable {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      pointer-events: none;
+    }
+
     .switch {
       display: block;
       position: relative;
@@ -457,25 +490,37 @@
           <div class="input-group" id="quality-group">
             <label for="quality">Quality</label>
             <div class="range-min">4</div>
-            <input type="range" id="quality" min="4" max="63" value="10" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="quality"></div>
+              <input type="range" id="quality" min="4" max="63" value="10" class="default-action">
+            </div>
             <div class="range-max">63</div>
           </div>
           <div class="input-group" id="brightness-group">
             <label for="brightness">Brightness</label>
             <div class="range-min">-2</div>
-            <input type="range" id="brightness" min="-2" max="2" value="0" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="brightness"></div>
+              <input type="range" id="brightness" min="-2" max="2" value="0" class="default-action">
+            </div>
             <div class="range-max">2</div>
           </div>
           <div class="input-group" id="contrast-group">
             <label for="contrast">Contrast</label>
             <div class="range-min">-2</div>
-            <input type="range" id="contrast" min="-2" max="2" value="0" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="contrast"></div>
+              <input type="range" id="contrast" min="-2" max="2" value="0" class="default-action">
+            </div>
             <div class="range-max">2</div>
           </div>
           <div class="input-group" id="saturation-group">
             <label for="saturation">Saturation</label>
             <div class="range-min">-2</div>
-            <input type="range" id="saturation" min="-2" max="2" value="0" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="saturation"></div>
+              <input type="range" id="saturation" min="-2" max="2" value="0" class="default-action">
+            </div>
             <div class="range-max">2</div>
           </div>
           <div class="input-group" id="awb-group">
@@ -519,13 +564,19 @@
           <div class="input-group" id="ae_level-group">
             <label for="ae_level">AE Level</label>
             <div class="range-min">-2</div>
-            <input type="range" id="ae_level" min="-2" max="2" value="0" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="ae_level"></div>
+              <input type="range" id="ae_level" min="-2" max="2" value="0" class="default-action">
+            </div>
             <div class="range-max">2</div>
           </div>
           <div class="input-group" id="aec_value-group">
             <label for="aec_value">Exposure</label>
             <div class="range-min">0</div>
-            <input type="range" id="aec_value" min="0" max="1200" value="204" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="aec_value"></div>
+              <input type="range" id="aec_value" min="0" max="1200" value="204" class="default-action">
+            </div>
             <div class="range-max">1200</div>
           </div>
           <div class="input-group" id="agc-group">
@@ -538,13 +589,19 @@
           <div class="input-group hidden" id="agc_gain-group">
             <label for="agc_gain">Gain</label>
             <div class="range-min">1x</div>
-            <input type="range" id="agc_gain" min="0" max="30" value="5" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="agc_gain"></div>
+              <input type="range" id="agc_gain" min="0" max="30" value="5" class="default-action">
+            </div>
             <div class="range-max">31x</div>
           </div>
           <div class="input-group" id="gainceiling-group">
             <label for="gainceiling">Gain Ceiling</label>
             <div class="range-min">2x</div>
-            <input type="range" id="gainceiling" min="0" max="6" value="0" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="gainceiling"></div>
+              <input type="range" id="gainceiling" min="0" max="6" value="0" class="default-action">
+            </div>
             <div class="range-max">128x</div>
           </div>
           <div class="input-group" id="bpc-group">
@@ -613,7 +670,10 @@
           <div class="input-group" id="led-group">
             <label for="led_intensity">LED Intensity</label>
             <div class="range-min">0</div>
-            <input type="range" id="led_intensity" min="0" max="255" value="255" class="default-action">
+            <div class="range-wrap">
+              <div class="range-value" for="led_intensity"></div>
+              <input type="range" id="led_intensity" min="0" max="255" value="255" class="default-action">
+            </div>
             <div class="range-max">255</div>
           </div>
           <div class="input-group" id="flash-group">
@@ -626,15 +686,19 @@
           <div class="input-group" id="video_fps-group">
             <label for="video_fps">Lapse Video FPS</label>
             <div class="range-min">1</div>
-            <input type="range" id="video_fps" min="1" max="60" step="1" value="2"
-              class="default-action disableOnLapse">
+            <div class="range-wrap">
+              <div class="range-value" for="video_fps"></div>
+              <input type="range" id="video_fps" min="1" max="60" step="1" value="2" class="default-action disableOnLapse">
+            </div>
             <div class="range-max">60</div>
           </div>
           <div class="input-group" id="frame_delay-group">
             <label for="frame_delay">Lapse Delay in ms</label>
             <div class="range-min">100</div>
-            <input type="range" id="frame_delay" min="100" max="60000" step="100" value="500"
-              class="default-action disableOnLapse">
+            <div class="range-wrap">
+              <div class="range-value" for="frame_delay"></div>
+              <input type="range" id="frame_delay" min="100" max="60000" step="100" value="500" class="default-action disableOnLapse">
+            </div>
             <div class="range-max">60000</div>
           </div>
           <section id="buttons">
@@ -934,6 +998,20 @@
           el.onclick = () => {
             hide(el.parentNode);
           };
+        });
+
+      document
+        .querySelectorAll('.range-value')
+        .forEach(el => {
+          const range = document.getElementById(el.getAttribute('for'));
+          const setValue = () => {
+            const newValue = Number((range.value - range.min) * 100 / (range.max - range.min));
+            const newPosition = 10 - (newValue * 0.2);
+            el.innerHTML = `<span class="unselectable">${range.value}</span>`;
+            el.style.left = `calc(${newValue}% + (${newPosition}px))`;
+          };
+          setValue();
+          range.addEventListener('input', setValue);
         });
 
       const lapseButton = document.getElementById('lapse-running');
