@@ -1091,20 +1091,21 @@
           if (state[otaUpdateCheck.id]) {
             show(otaUpdateCheck);
           }
-        });
 
-      document
-        .querySelectorAll('.range-value')
-        .forEach(el => {
-          const range = document.getElementById(el.getAttribute('for'));
-          const setValue = () => {
-            const newValue = Number((range.value - range.min) * 100 / (range.max - range.min));
-            const newPosition = 10 - (newValue * 0.2);
-            el.innerHTML = `<span class="unselectable">${range.value}</span>`;
-            el.style.left = `calc(${newValue}% + (${newPosition}px))`;
-          };
-          setValue();
-          range.addEventListener('input', setValue);
+          document
+            .querySelectorAll('.range-value')
+            .forEach(el => {
+              const range = document.getElementById(el.getAttribute('for'));
+              const setValue = () => {
+                const newValue = Number((range.value - range.min) * 100 / (range.max - range.min));
+                const newPosition = 10 - (newValue * 0.2);
+                el.innerHTML = `<span class="unselectable">${range.value}</span>`;
+                el.style.left = `calc(${newValue}% + (${newPosition}px))`;
+              };
+              setValue();
+              range.addEventListener('input', setValue);
+            });
+
         });
 
       updateFileBrowser();
