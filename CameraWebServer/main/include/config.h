@@ -116,7 +116,7 @@
 #define CAM_TASK_TIMER_NUM 1
 #endif
 #ifndef TMP_INDEX_FILE_PATH
-#define TMP_INDEX_FILE_PATH ".tmpavi.idx"
+#define TMP_INDEX_FILE_PATH "tmpavi.idx"
 #endif
 // TODO changable?
 #ifndef TIMER_DIVIDER

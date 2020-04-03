@@ -142,7 +142,7 @@ menu "CameraWebServer Parameters"
 
         config TMP_INDEX_FILE_PATH
             string "Temporary index file path"
-            default ".tmpavi.idx"
+            default "tmpavi.idx"
             help
                 Temporary file for the index needed to create a avi file during the timelapse.
     endmenu

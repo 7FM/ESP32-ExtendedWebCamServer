@@ -209,7 +209,11 @@ int handleLapse(sensor_t *s, int lapse) {
 
         // Delete temporary file
         remove(TMP_INDEX_FILE_PATH);
+
+        ESP_LOGI(TAG, "timelapse ended!");
     } else {
+        ESP_LOGI(TAG, "starting timelapse!");
+
         const resolution_info_t &res = resolution[s->status.framesize];
 
         //TODO proper file naming convensions... include date/time?
