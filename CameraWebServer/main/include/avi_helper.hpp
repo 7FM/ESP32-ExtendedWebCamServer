@@ -5,6 +5,133 @@
 #include <string.h>
 
 /*
+ Fields that needs to be patched: maxBytesPerSec, totalFrames
+ */
+// Second entry
+#define PATCH_AVI_MAIN_HEADER_MAX_BYTES_PER_SEC_OFFSET (sizeof(uint32_t))
+// Fifth entry
+#define PATCH_AVI_MAIN_HEADER_TOTAL_FRAMES_OFFSET (sizeof(uint32_t) * 4)
+typedef struct {
+    // time delay between frames in microseconds
+    uint32_t microSecPerFrame = 1000000;
+    // data rate of AVI data
+    uint32_t maxBytesPerSec = 0;
+    // padding multiple size, typically 2048
+    uint32_t _paddingGranularity = 0;
+
+    // parameter flags:
+/* has idx1 chunk */
+#define AVIF_HASINDEX 0x00000010
+/* must use idx1 chunk to determine order */
+#define AVIF_MUSTUSEINDEX 0x00000020
+/* AVI file is interleaved */
+#define AVIF_ISINTERLEAVED 0x00000100
+#define AVIF_TRUSTCKTYPE 0x00000800
+/* specially allocated used for capturing real time video */
+#define AVIF_WASCAPTUREFILE 0x00010000
+/* contains copyrighted data */
+#define AVIF_COPYRIGHTED 0x00020000
+    uint32_t flags = AVIF_HASINDEX;
+
+    // number of video frames
+    uint32_t totalFrames = 0;
+    // number of preview frames
+    uint32_t _initialFrames = 0;
+    // number of data streams (1 or 2) here: 1 because we have only video/images
+    uint32_t _streams = 1;
+    // suggested playback buffer size in bytes
+    uint32_t _suggestedBufferSize = 0;
+
+    // width of video image in pixels
+    uint32_t width = 0;
+    // height of video image in pixels
+    uint32_t height = 0;
+
+    // time scale, typically 30
+    // data rate(frame rate = data rate / time scale)
+    // starting time, typically 0
+    // size of AVI data chunk in time scale units
+    uint32_t _reserved[4] = {0};
+} AVIMainHeader;
+
+#define AVI_STREAM_HEADER_FCCTYPE_AUDIO CONVERT_TO_FCC("auds")
+#define AVI_STREAM_HEADER_FCCTYPE_MIDI CONVERT_TO_FCC("mids")
+#define AVI_STREAM_HEADER_FCCTYPE_TEXT CONVERT_TO_FCC("txts")
+#define AVI_STREAM_HEADER_FCCTYPE_VIDEO CONVERT_TO_FCC("vids")
+
+/*
+ Fields that needs to be patched: length
+ */
+#define PATCH_AVI_STREAM_HEADER_LENGTH_OFFSET (sizeof(uint_32_t) * 8)
+typedef struct {
+    uint32_t _fccType = AVI_STREAM_HEADER_FCCTYPE_VIDEO;
+    uint32_t _fccHandler = CONVERT_TO_FCC("MJPG");
+    uint32_t _flags = 0;
+    uint16_t _priority = 0;
+    uint16_t _language = 0;
+
+    //Number of the frst block of the stream that is present in the file
+    uint32_t _initialFrames = 0;
+    /*
+    rate / scale =
+    samples / second (audio) or
+    frames / second (video).
+    */
+    uint32_t scale = 1;
+    uint32_t rate = 1;
+    //Start time of stream. In the case of VBR audio, this value indicates the number of
+    //silent frames to be played before the stream starts.
+    uint32_t _start = 0;
+
+    //size of stream in units as defned in rate and scale
+    uint32_t length = 0;
+    //Size of buffer necessary to store blocks of that stream. Can be 0 (in that case the application has to guess).
+    uint32_t _suggestedBufferSize = 0;
+    //should indicate the quality of the stream. Not important
+    uint32_t _quality = 0;
+    //number of bytes of one stream atom (that should not be split any further).
+    uint32_t _sampleSize = 0;
+} AVIStreamHeader;
+
+typedef struct _AVIStreamFormat {
+    /*
+    Specifies the number of bytes required by the structure.
+    This value does not include the size of the color table
+    or the size of the color masks, if they are appended to the end of structure.
+    */
+    uint32_t _biSize = sizeof(_AVIStreamFormat);
+    // Specifies the width of the bitmap, in pixels
+    uint32_t biWidth = 0;
+    // Specifies the height of the bitmap, in pixels.
+    uint32_t biHeight = 0;
+    // Specifies the number of planes for the target device. This value must be set to 1.
+    //uint16_t biPlanes = 1;
+    /*
+    Specifies the number of bits per pixel (bpp).
+    For uncompressed formats, this value is the average number of bits per pixel.
+    For compressed formats, this value is the implied bit depth of the uncompressed image,
+    after the image has been decoded.
+    */
+    //uint16_t biBitCount = 24;
+    // We need to swap sides! (uint16_t + little Endian = PITA!)
+    uint32_t _merged = (24 << 16) | 1;
+
+    // For compressed video and YUV formats, this member is a FOURCC code, specified as a DWORD in little-endian order.
+    uint32_t _biCompression = CONVERT_TO_FCC("MJPG");
+    // Specifies the size, in bytes, of the image. This can be set to 0 for uncompressed RGB bitmaps.
+    uint32_t _biSizeImage = 0;
+    // Specifies the horizontal resolution, in pixels per meter, of the target device for the bitmap.
+    uint32_t _biXPelsPerMeter = 0;
+    // Specifies the vertical resolution, in pixels per meter, of the target device for the bitmap.
+    uint32_t _biYPelsPerMete = 0;
+
+    // Specifies the number of color indices in the color table that are actually used by the bitmap.
+    uint32_t _biClrUsed = 0;
+    // Specifies the number of color indices that are considered important for displaying the bitmap. If this value is zero, all colors are important.
+    uint32_t _biClrImportant = 0;
+} AVIStreamFormat;
+
+/*
 static const char LIST_FORM[] = {
     // FOURCC LIST
     'L', 'I', 'S', 'T',
@@ -141,41 +268,41 @@ inline size_t CHUNK(char *buf, size_t *offset, const char ckID[4], size_t chunkS
     return _write_riff_header(buf, offset, ckID, NULL, chunkSize);
 }
 
-inline size_t PATCH_CHUNK_SIZE(FILE *file, size_t sizeOffset, size_t chunkSize) {
+inline void PATCH_FIELD(FILE *file, size_t sizeOffset, size_t value) {
     fseek(file, sizeOffset, SEEK_SET);
     char buf[4] = {0};
-    writeLittleEndian(buf, chunkSize);
+    writeLittleEndian(buf, value);
     fwrite(buf, 1, 4, file);
-
-    return RIFF_CHUNK_HEADER_SIZE + chunkSize;
 }
 
-inline size_t PATCH_CHUNK_SIZE(char *bufBase, size_t sizeOffset, size_t chunkSize) {
-    writeLittleEndian(bufBase + sizeOffset, chunkSize);
-
-    return RIFF_CHUNK_HEADER_SIZE + chunkSize;
+inline void PATCH_FIELD(char *bufBase, size_t fieldOffset, size_t value) {
+    writeLittleEndian(bufBase + fieldOffset, value);
 }
 
 template <class T>
 inline size_t PATCH_LIST_RIFF_SIZE(T dest, size_t sizeOffset, size_t listDataSize) {
     // add lenght for listType/fileType FOURCC
-    return PATCH_CHUNK_SIZE(dest, sizeOffset, listDataSize + 4);
+    const chunkSize = listDataSize + 4;
+    PATCH_FIELD(dest, sizeOffset, chunkSize)
+    return RIFF_CHUNK_HEADER_SIZE + chunkSize;
 }
 
+// Calculate the correct chunk size(everything is a chunk) with the writeOffset and the offset for the size field
 template <class T>
-inline void patchNonChunkSize(T dest, size_t writeOffset, size_t patchSizeOffset) {
+inline void AUTO_PATCH_SIZE(T dest, size_t writeOffset, size_t patchSizeOffset) {
+    // -4 to exclude the bytes to store the chunk size
     size_t blockSize = writeOffset - patchSizeOffset - 4;
-    PATCH_CHUNK_SIZE(dest, patchSizeOffset, blockSize);
+    PATCH_FIELD(dest, patchSizeOffset, blockSize);
 }
 
 inline void updateAVISize(FILE *aviFile, size_t writeOffset) {
-    patchNonChunkSize(aviFile, writeOffset, AVI_RIFF_BLOCK_SIZE_OFFSET);
-    patchNonChunkSize(aviFile, writeOffset, AVI_MOVI_BLOCK_SIZE_OFFSET);
+    AUTO_PATCH_SIZE(aviFile, writeOffset, AVI_RIFF_BLOCK_SIZE_OFFSET);
+    AUTO_PATCH_SIZE(aviFile, writeOffset, AVI_MOVI_BLOCK_SIZE_OFFSET);
 }
 
 inline void updateAVISize(char *baseBuffer, size_t writeOffset) {
-    patchNonChunkSize(baseBuffer, writeOffset, AVI_RIFF_BLOCK_SIZE_OFFSET);
-    patchNonChunkSize(baseBuffer, writeOffset, AVI_MOVI_BLOCK_SIZE_OFFSET);
+    AUTO_PATCH_SIZE(baseBuffer, writeOffset, AVI_RIFF_BLOCK_SIZE_OFFSET);
+    AUTO_PATCH_SIZE(baseBuffer, writeOffset, AVI_MOVI_BLOCK_SIZE_OFFSET);
 }
 
 /*
@@ -220,7 +347,6 @@ static inline size_t writePaddedData(T dest, size_t *offset, const char *data, s
     int neededPadding = (PADDING_SIZE - (dataSize & (PADDING_SIZE - 1))) & (PADDING_SIZE - 1);
 
     if (neededPadding) {
-        printf("WARNING: PADDING NEEDED: %d, SIZE: %d\n", neededPadding, dataSize);
         writeFn(dest, paddingBuffer, neededPadding, dataSize);
         return *offset += dataSize + neededPadding;
     } else {
@@ -259,7 +385,7 @@ inline void appendIndex(FILE *indexFile, size_t offset, size_t size) {
     // to have a offset at the start of the header
     writeLittleEndian(buffer, offset - (AVI_MOVI_BLOCK_SIZE_OFFSET + 4 + RIFF_CHUNK_HEADER_SIZE));
 
-    // TODO padded size or dataSize?
+    // TODO padded size or dataSize? currently: dataSize => includes bytes used for padding
     writeLittleEndian(buffer + 4, size);
 
     fwrite(buffer, 1, 8, indexFile);
@@ -329,202 +455,23 @@ inline void mergeAVIAndIndexFile(FILE *aviFile, FILE *indexFile, size_t *offset)
     size_t writeOffset = (*offset += size);
 
     // Patch the idx1 chunk size
-    PATCH_CHUNK_SIZE(aviFile, idxSizeOffset, size);
+    PATCH_FIELD(aviFile, idxSizeOffset, size);
 
     // Patch movi size with size saved before starting to write idices
-    patchNonChunkSize(aviFile, moviSize, AVI_MOVI_BLOCK_SIZE_OFFSET);
+    AUTO_PATCH_SIZE(aviFile, moviSize, AVI_MOVI_BLOCK_SIZE_OFFSET);
 
     // Patch the riff size
-    patchNonChunkSize(aviFile, writeOffset, AVI_RIFF_BLOCK_SIZE_OFFSET);
+    AUTO_PATCH_SIZE(aviFile, writeOffset, AVI_RIFF_BLOCK_SIZE_OFFSET);
 }
 
 inline void mergeAndPatch(FILE *aviFile, FILE *indexFile, size_t *offset, size_t framesTaken, size_t maxFrameBytes, size_t videoFPS) {
     mergeAVIAndIndexFile(aviFile, indexFile, offset);
-    //TODO patch header fields
+
+    // patch header fields
+    PATCH_FIELD(aviFile, AVI_MAIN_HEADER_START + PATCH_AVI_MAIN_HEADER_MAX_BYTES_PER_SEC_OFFSET, maxFrameBytes * videoFPS); //TODO this field might need no patch because it will probably be ignored anyway
+    PATCH_FIELD(aviFile, AVI_MAIN_HEADER_START + PATCH_AVI_MAIN_HEADER_TOTAL_FRAMES_OFFSET, framesTaken);
+    PATCH_FIELD(aviFile, AVI_STREAM_HEADER_START + PATCH_AVI_STREAM_HEADER_LENGTH_OFFSET, framesTaken);
 }
-
-/*
-    0xA0, 0x86, 0x01, 0x00,  // 1 000 00 => 0,1s
-    0x80, 0x66, 0x01, 0x00,  // max. 91 776 bytes/second
-     0x00, 0x00, 0x00, 0x00,
-      0x10, 0x00, 0x00, 0x00,
-
-  0x64, 0x00, 0x00, 0x00,
-   0x00, 0x00, 0x00, 0x00,
-    0x01, 0x00, 0x00, 0x00,
-     0x00, 0x00, 0x00, 0x00,
-
-  0x80, 0x02, 0x00, 0x00,
-   0xe0, 0x01, 0x00, 0x00,
-
-    0x00, 0x00, 0x00, 0x00,
-     0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-   0x00, 0x00, 0x00, 0x00,
-*/
-
-/*
- Fields that needs to be patched: maxBytesPerSec, totalFrames
- */
-typedef struct _avimainheader {
-    // time delay between frames in microseconds
-    uint32_t microSecPerFrame = 1000000;
-    // data rate of AVI data
-    uint32_t maxBytesPerSec = 0;
-    // padding multiple size, typically 2048
-    uint32_t _paddingGranularity = 0;
-
-    // parameter flags:
-/* has idx1 chunk */
-#define AVIF_HASINDEX 0x00000010
-/* must use idx1 chunk to determine order */
-#define AVIF_MUSTUSEINDEX 0x00000020
-/* AVI file is interleaved */
-#define AVIF_ISINTERLEAVED 0x00000100
-#define AVIF_TRUSTCKTYPE 0x00000800
-/* specially allocated used for capturing real time video */
-#define AVIF_WASCAPTUREFILE 0x00010000
-/* contains copyrighted data */
-#define AVIF_COPYRIGHTED 0x00020000
-    uint32_t flags = AVIF_HASINDEX;
-
-    // number of video frames
-    uint32_t totalFrames = 0;
-    // number of preview frames
-    uint32_t _initialFrames = 0;
-    // number of data streams (1 or 2) here: 1 because we have only video/images
-    uint32_t _streams = 1;
-    // suggested playback buffer size in bytes
-    uint32_t _suggestedBufferSize = 0;
-
-    // width of video image in pixels
-    uint32_t width = 0;
-    // height of video image in pixels
-    uint32_t height = 0;
-
-    // time scale, typically 30
-    // data rate(frame rate = data rate / time scale)
-    // starting time, typically 0
-    // size of AVI data chunk in time scale units
-    uint32_t _reserved[4] = {0};
-} AVIMainHeader;
-
-/*
-0x76, 0x69, 0x64, 0x73, // vids
-0x4D, 0x4A, 0x50, 0x47, // MJPEG
-0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 
-0x00, 0x00,
-
-0x00, 0x00, 0x00, 0x00,
- 0x01, 0x00, 0x00, 0x00,
-  0x01, 0x00, 0x00, 0x00,
-   0x00, 0x00, 0x00, 0x00,
-   
- 0x0A, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00
-*/
-
-#define AVI_STREAM_HEADER_FCCTYPE_AUDIO CONVERT_TO_FCC("auds")
-#define AVI_STREAM_HEADER_FCCTYPE_MIDI CONVERT_TO_FCC("mids")
-#define AVI_STREAM_HEADER_FCCTYPE_TEXT CONVERT_TO_FCC("txts")
-#define AVI_STREAM_HEADER_FCCTYPE_VIDEO CONVERT_TO_FCC("vids")
-
-/*
- Fields that needs to be patched: length
- */
-typedef struct _AVIStreamHeader {
-    uint32_t _fccType = AVI_STREAM_HEADER_FCCTYPE_VIDEO;
-    uint32_t _fccHandler = CONVERT_TO_FCC("MJPG");
-    uint32_t _flags = 0;
-    uint16_t _priority = 0;
-    uint16_t _language = 0;
-
-    //Number of the frst block of the stream that is present in the file
-    uint32_t _initialFrames = 0;
-    /*
-    rate / scale =
-    samples / second (audio) or
-    frames / second (video).
-    */
-    uint32_t scale = 1;
-    uint32_t rate = 1;
-    //Start time of stream. In the case of VBR audio, this value indicates the number of
-    //silent frames to be played before the stream starts.
-    uint32_t _start = 0;
-
-    //size of stream in units as defned in rate and scale
-    uint32_t length = 0;
-    //Size of buffer necessary to store blocks of that stream. Can be 0 (in that case the application has to guess).
-    uint32_t _suggestedBufferSize = 0;
-    //should indicate the quality of the stream. Not important
-    uint32_t _quality = 0;
-    //number of bytes of one stream atom (that should not be split any further).
-    uint32_t _sampleSize = 0;
-} AVIStreamHeader;
-
-/*
-  0x28, 0x00, 0x00, 0x00,
-   0x80, 0x02, 0x00, 0x00,  // 640
-    0xe0, 0x01, 0x00, 0x00, // 480
-     0x01, 0x00, 
-     0x18, 0x00, // 24
-
-   0x4D, 0x4A, 0x50, 0x47, //MJPEG
-    0x00, 0x84, 0x03, 0x00, // 230.400
-     0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00,
-
-   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-
-     0x49, 0x4E, 0x46, 0x4F, //INFO
-      0x10, 0x00, 0x00, 0x00, // length
-      
-   0x6A, 0x61, 0x6D, 0x65,      //
-    0x73, 0x7A, 0x61, 0x68,     // 'jameszahary v60 '
-     0x61, 0x72, 0x79, 0x20,    //
-      0x76, 0x36, 0x30, 0x20    //
-*/
-typedef struct _AVIStreamFormat {
-    /*
-    Specifies the number of bytes required by the structure.
-    This value does not include the size of the color table
-    or the size of the color masks, if they are appended to the end of structure.
-    */
-    uint32_t _biSize = sizeof(_AVIStreamFormat);
-    // Specifies the width of the bitmap, in pixels
-    uint32_t biWidth = 0;
-    // Specifies the height of the bitmap, in pixels.
-    uint32_t biHeight = 0;
-    // Specifies the number of planes for the target device. This value must be set to 1.
-    //uint16_t biPlanes = 1;
-    /*
-    Specifies the number of bits per pixel (bpp). 
-    For uncompressed formats, this value is the average number of bits per pixel.
-    For compressed formats, this value is the implied bit depth of the uncompressed image,
-    after the image has been decoded.
-    */
-    //uint16_t biBitCount = 24;
-    // We need to swap sides! (uint16_t + little Endian = PITA!)
-    uint32_t _merged = (24 << 16) | 1;
-
-    // For compressed video and YUV formats, this member is a FOURCC code, specified as a DWORD in little-endian order.
-    uint32_t _biCompression = CONVERT_TO_FCC("MJPG");
-    // Specifies the size, in bytes, of the image. This can be set to 0 for uncompressed RGB bitmaps.
-    uint32_t _biSizeImage = 0;
-    // Specifies the horizontal resolution, in pixels per meter, of the target device for the bitmap.
-    uint32_t _biXPelsPerMeter = 0;
-    // Specifies the vertical resolution, in pixels per meter, of the target device for the bitmap.
-    uint32_t _biYPelsPerMete = 0;
-
-    // Specifies the number of color indices in the color table that are actually used by the bitmap.
-    uint32_t _biClrUsed = 0;
-    // Specifies the number of color indices that are considered important for displaying the bitmap. If this value is zero, all colors are important.
-    uint32_t _biClrImportant = 0;
-} AVIStreamFormat;
 
 inline size_t createAVI_File(FILE *outFile, const AVIMainHeader &aviHeader, const AVIStreamHeader &streamHeader, const AVIStreamFormat &streamFormat) {
 
