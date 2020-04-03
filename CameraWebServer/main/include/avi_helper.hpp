@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "makros.h"
 
 /*
  Fields that needs to be patched: maxBytesPerSec, totalFrames
@@ -62,7 +63,7 @@ typedef struct {
 /*
  Fields that needs to be patched: length
  */
-#define PATCH_AVI_STREAM_HEADER_LENGTH_OFFSET (sizeof(uint_32_t) * 8)
+#define PATCH_AVI_STREAM_HEADER_LENGTH_OFFSET (sizeof(uint32_t) * 8)
 typedef struct {
     uint32_t _fccType = AVI_STREAM_HEADER_FCCTYPE_VIDEO;
     uint32_t _fccHandler = CONVERT_TO_FCC("MJPG");
@@ -199,9 +200,6 @@ RIFF ('AVI '
      )
 */
 
-// Makro to create a 32 bit int from FOURCC char array such that it can be written in little endian without problems
-#define CONVERT_TO_FCC(cstr) (cstr[0] | cstr[1] << 8 | cstr[2] << 16 | cstr[3] << 24)
-
 // Sizes of the basic headers
 #define RIFF_LIST_HEADER_SIZE 12
 #define RIFF_CHUNK_HEADER_SIZE 8
@@ -282,8 +280,8 @@ inline void PATCH_FIELD(char *bufBase, size_t fieldOffset, size_t value) {
 template <class T>
 inline size_t PATCH_LIST_RIFF_SIZE(T dest, size_t sizeOffset, size_t listDataSize) {
     // add lenght for listType/fileType FOURCC
-    const chunkSize = listDataSize + 4;
-    PATCH_FIELD(dest, sizeOffset, chunkSize)
+    const size_t chunkSize = listDataSize + 4;
+    PATCH_FIELD(dest, sizeOffset, chunkSize);
     return RIFF_CHUNK_HEADER_SIZE + chunkSize;
 }
 
@@ -291,7 +289,7 @@ inline size_t PATCH_LIST_RIFF_SIZE(T dest, size_t sizeOffset, size_t listDataSiz
 template <class T>
 inline void AUTO_PATCH_SIZE(T dest, size_t writeOffset, size_t patchSizeOffset) {
     // -4 to exclude the bytes to store the chunk size
-    size_t blockSize = writeOffset - patchSizeOffset - 4;
+    const size_t blockSize = writeOffset - patchSizeOffset - 4;
     PATCH_FIELD(dest, patchSizeOffset, blockSize);
 }
 
