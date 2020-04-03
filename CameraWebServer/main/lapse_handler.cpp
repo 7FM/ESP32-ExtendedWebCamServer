@@ -1,6 +1,7 @@
 #include "esp_camera.h"
 #include "esp_http_server.h"
 #include "img_converters.h"
+#include "sensor.h"
 #include <stdio.h>
 
 // Local files
@@ -144,6 +145,7 @@ static void aviTaskRoutine(void *arg) {
 static inline void startTimer() {
 
     timer_config_t config;
+    memset(&config, 0, sizeof(config));
 
     config.divider = TIMER_DIVIDER;
     config.counter_dir = TIMER_COUNT_UP;
@@ -208,61 +210,26 @@ int handleLapse(sensor_t *s, int lapse) {
         // Delete temporary file
         remove(TMP_INDEX_FILE_PATH);
     } else {
-        size_t width;
-        size_t height;
-
-        switch (s->status.framesize) {
-            case FRAMESIZE_QXGA:
-                width = 2048;
-                height = 1564;
-                break;
-            case FRAMESIZE_UXGA:
-                width = 1600;
-                height = 1200;
-                break;
-            case FRAMESIZE_SXGA:
-                width = 1280;
-                height = 1024;
-                break;
-            case FRAMESIZE_XGA:
-                width = 1024;
-                height = 768;
-                break;
-            case FRAMESIZE_SVGA:
-                width = 800;
-                height = 600;
-                break;
-            case FRAMESIZE_VGA:
-                width = 640;
-                height = 480;
-                break;
-            case FRAMESIZE_CIF:
-                width = 400;
-                height = 296;
-                break;
-            case FRAMESIZE_QVGA:
-                width = 320;
-                height = 240;
-                break;
-            case FRAMESIZE_HQVGA:
-                width = 240;
-                height = 176;
-                break;
-            case FRAMESIZE_QQVGA:
-                width = 160;
-                height = 120;
-                break;
-
-            // Well there should be no other option!
-            default:
-                return 1;
-        }
+        const resolution_info_t &res = resolution[s->status.framesize];
 
         //TODO proper file naming convensions... include date/time?
         aviFile = fopen("test.avi", "wb");
+
+        if (!aviFile) {
+            ESP_LOGE(TAG, "Could not open avi file!");
+            return 1;
+        }
+
         indexFile = fopen(TMP_INDEX_FILE_PATH, "wb+");
 
-        aviWriteOffset = createAVI_File(aviFile, width, height, videoFPS);
+        if (!indexFile) {
+            ESP_LOGE(TAG, "Could not open avi index file!");
+            fclose(aviFile);
+            aviFile = NULL;
+            return 1;
+        }
+
+        aviWriteOffset = createAVI_File(aviFile, res.width, res.height, videoFPS);
 
         framesTaken = 0;
         maxFrameBytes = 0;
