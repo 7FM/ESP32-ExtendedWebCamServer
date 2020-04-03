@@ -6,8 +6,9 @@
 
 // Local files
 #include "avi_helper.hpp"
-#include "makros.h"
+#include "flashlight.h"
 #include "lapse_handler.hpp"
+#include "makros.h"
 
 //FreeRTOS
 #include "freertos/FreeRTOS.h"
@@ -86,9 +87,9 @@ static void cameraTaskRoutine(void *arg) {
     for (;;) {
         // Reset the notify count to zero after processing one frame
         if (ulTaskNotifyTake(pdTRUE, xMaxBlockTime)) {
-            camera_fb_t *fb = esp_camera_fb_get();
+            camera_fb_t *fb = takePicture();
             if (!fb) {
-                ESP_LOGE(TAG,"Camera capture failed!");
+                ESP_LOGE(TAG, "Camera capture failed!");
                 break;
             }
             if (xQueueSend(frameQueue, &fb, xMaxBlockTime >> 1) == pdFALSE) {

@@ -22,6 +22,7 @@
 
 // Local files
 #include "camera_helper.h"
+#include "flashlight.h"
 #include "fs_browser.h"
 #include "http_server.hpp"
 #include "lapse_handler.hpp"
@@ -75,6 +76,24 @@ static inline void enable_led(bool en) { // Turn LED On or Off
     ledc_update_duty(CONFIG_LED_LEDC_SPEED_MODE, (ledc_channel_t)CONFIG_LED_LEDC_CHANNEL);
 }
 
+camera_fb_t *takePicture() {
+    bool mustEnableFlashLight = useFlash && !camLEDStatus;
+
+    if (mustEnableFlashLight) {
+        enable_led(true);
+        //TODO during runtime customizable?
+        vTaskDelay(FLASH_LIGHT_WAIT);
+    }
+
+    camera_fb_t *fb = esp_camera_fb_get();
+
+    if (mustEnableFlashLight) {
+        enable_led(false);
+    }
+
+    return fb;
+}
+
 static inline int handleLED(int led) {
     if (led == camLEDStatus) {
         return 1;
@@ -100,18 +119,8 @@ static size_t jpg_encode_stream(void *arg, size_t index, const void *data, size_
 }
 
 static esp_err_t capture_handler(httpd_req_t *req) {
-    bool mustEnableFlashLight = useFlash && !camLEDStatus;
 
-    if (mustEnableFlashLight) {
-        enable_led(true);
-        vTaskDelay(FLASH_LIGHT_WAIT);
-    }
-
-    camera_fb_t *fb = esp_camera_fb_get();
-
-    if (mustEnableFlashLight) {
-        enable_led(false);
-    }
+    camera_fb_t *fb = takePicture();
 
     if (!fb) {
         ESP_LOGE(TAG, "Camera capture failed");
@@ -162,7 +171,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     isStreaming = true;
 
     do {
-        fb = esp_camera_fb_get();
+        fb = takePicture();
         if (!fb) {
             ESP_LOGE(TAG, "Camera capture failed");
             res = ESP_FAIL;
