@@ -154,7 +154,7 @@ extern "C" void app_main() {
     String hMirror;
     String vFlip;
 #ifdef OTA_FEATURE
-//TODO implement external cert support
+    //TODO implement external cert support
     String otaCertPath;
 #endif
 
@@ -194,7 +194,7 @@ extern "C" void app_main() {
         }
     }
 
-    if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str())) {
+    if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str(), devName.c_str())) {
         return;
     }
 
@@ -207,7 +207,7 @@ extern "C" void app_main() {
             ESP_LOGI(TAG, "Wait until connected to wifi since %ds", i);
             ++i;
             if (i >= 10) {
-                if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str())) {
+                if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str(), devName.c_str())) {
                     return;
                 }
                 i = 0;
@@ -218,7 +218,7 @@ extern "C" void app_main() {
     }
 #endif
 
-    initMDNS(devName.c_str(), ssid.length());
+    initMDNS(devName.c_str());
 
     startCameraServer();
 
@@ -227,7 +227,7 @@ extern "C" void app_main() {
             if (!isConnectedToWiFi) {
                 ESP_LOGI(TAG, "***** WiFi restart *****");
 
-                if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str())) {
+                if (initWifi(ssid.c_str(), pwd.c_str(), ap_ssid.c_str(), ap_pwd.c_str(), ap_ip_addr.c_str(), devName.c_str())) {
                     return;
                 }
             }

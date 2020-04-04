@@ -90,7 +90,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
     return ESP_OK;
 }
 
-static void wifi_init_softap(const char *ap_ssid, const char *ap_pwd, const char *ap_ip_addr) {
+static void wifi_init_softap(const char *ap_ssid, const char *ap_pwd, const char *ap_ip_addr, const char *devName) {
     if (ap_ip_addr && ap_ip_addr[0] != '\0') {
         int a, b, c, d;
         sscanf(ap_ip_addr, "%d.%d.%d.%d", &a, &b, &c, &d);
@@ -101,6 +101,9 @@ static void wifi_init_softap(const char *ap_ssid, const char *ap_pwd, const char
         ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(WIFI_IF_AP));
         ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(WIFI_IF_AP, &ip_info));
         ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(WIFI_IF_AP));
+    }
+    if (devName && devName[0] != '\0') {
+        tcpip_adapter_set_hostname(WIFI_IF_AP, devName);
     }
     wifi_config_t wifi_config;
     memset(&wifi_config, 0, sizeof(wifi_config_t));
@@ -118,7 +121,10 @@ static void wifi_init_softap(const char *ap_ssid, const char *ap_pwd, const char
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
 }
 
-static void wifi_init_sta(const char *ssid, const char *pwd) {
+static void wifi_init_sta(const char *ssid, const char *pwd, const char *devName) {
+    if (devName && devName[0] != '\0') {
+        tcpip_adapter_set_hostname(WIFI_IF_STA, devName);
+    }
     wifi_config_t wifi_config;
     memset(&wifi_config, 0, sizeof(wifi_config_t));
     snprintf((char *)wifi_config.sta.ssid, 32, "%s", ssid);
@@ -128,10 +134,12 @@ static void wifi_init_sta(const char *ssid, const char *pwd) {
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
 }
 
-int initWifi(const char *ssid, const char *pwd, const char *ap_ssid, const char *ap_pwd, const char *ap_ip_addr) {
+int initWifi(const char *ssid, const char *pwd, const char *ap_ssid, const char *ap_pwd, const char *ap_ip_addr, const char *devName) {
     static int wasIntialized = 0;
 
-    if (wasIntialized) {
+    const int reinitialize = wasIntialized;
+
+    if (reinitialize) {
         esp_wifi_disconnect();
         esp_wifi_stop();
         esp_wifi_deinit();
@@ -165,16 +173,18 @@ int initWifi(const char *ssid, const char *pwd, const char *ap_ssid, const char 
     }
 
     tcpip_adapter_init();
-    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+    if (!reinitialize) {
+        ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+    }
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
 
     if (mode & WIFI_MODE_AP) {
-        wifi_init_softap(ap_ssid, ap_pwd, ap_ip_addr);
+        wifi_init_softap(ap_ssid, ap_pwd, ap_ip_addr, devName);
     }
 
     if (mode & WIFI_MODE_STA) {
-        wifi_init_sta(ssid, pwd);
+        wifi_init_sta(ssid, pwd, devName);
     }
     ESP_ERROR_CHECK(esp_wifi_start());
     wasIntialized = 1;

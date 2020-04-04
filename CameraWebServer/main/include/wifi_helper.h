@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-int initWifi(const char *ssid, const char *pwd, const char *ap_ssid, const char *ap_pwd, const char *ap_ip_addr);
+int initWifi(const char *ssid, const char *pwd, const char *ap_ssid, const char *ap_pwd, const char *ap_ip_addr, const char* devName);
 
 extern volatile int isWiFiSTAMode;
 extern volatile int isConnectedToWiFi;

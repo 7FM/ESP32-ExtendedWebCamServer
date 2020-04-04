@@ -30,6 +30,7 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "mdns.h"
+#include "wifi_helper.h"
 #include <string.h>
 
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
@@ -49,8 +50,6 @@ static char hname[64];
 static char framesize[4];
 static char pixformat[4];
 static const char *model = NULL;
-
-static int _wifiSTAMode;
 
 static void mdns_query_for_cams() {
     mdns_result_t *new_cams = NULL;
@@ -88,7 +87,7 @@ const char *app_mdns_query(size_t *out_len) {
 
     //add own data first
     tcpip_adapter_ip_info_t ip;
-    if (_wifiSTAMode) {
+    if (isWiFiSTAMode) {
         tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
     } else {
         tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ip);
@@ -170,8 +169,7 @@ void app_mdns_update_framesize(int size) {
     }
 }
 
-int initMDNS(const char *devName, int wifiSTAMode) {
-    _wifiSTAMode = wifiSTAMode;
+int initMDNS(const char *devName) {
     uint8_t mac[6];
 
     query_lock = xSemaphoreCreateBinary();
@@ -213,15 +211,19 @@ int initMDNS(const char *devName, int wifiSTAMode) {
     snprintf(framesize, 4, "%d", s->status.framesize);
     snprintf(pixformat, 4, "%d", s->pixformat);
 
-    char *src = iname, *dst = hname, c;
+    const char *src = iname;
+    char *dst = hname;
+    const char toLowerOffset = 'A' - 'a';
     while (*src) {
-        c = *src++;
+        char c = *src;
         if (c >= 'A' && c <= 'Z') {
-            c -= 'A' - 'a';
+            c -= toLowerOffset;
         }
-        *dst++ = c;
+        *dst = c;
+        ++dst;
+        ++src;
     }
-    *dst++ = '\0';
+    *dst = '\0';
 
     if (mdns_init() != ESP_OK) {
         ESP_LOGE(TAG, "mdns_init() Failed");

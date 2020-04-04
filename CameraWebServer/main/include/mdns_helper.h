@@ -20,7 +20,7 @@ extern "C" {
 
 #include <stddef.h>
 
-int initMDNS(const char *devName, int wifiSTAMode);
+int initMDNS(const char *devName);
 void app_mdns_update_framesize(int size);
 const char * app_mdns_query(size_t * out_len);
 
