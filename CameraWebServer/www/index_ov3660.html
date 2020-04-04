@@ -453,6 +453,14 @@
       </path>
     </symbol>
   </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="display:none">
+    <symbol id="refresh-icon" viewBox="0 0 32 32">
+      <path d="M27.802 5.197c-2.925-3.194-7.13-5.197-11.803-5.197-8.837 0-16 7.163-16 16h3c0-7.18 5.82-13 13-13 3.844 0 7.298 1.669 9.678 4.322l-4.678 4.678h11v-11l-4.198 4.197z">
+      </path>
+      <path d="M29 16c0 7.18-5.82 13-13 13-3.844 0-7.298-1.669-9.678-4.322l4.678-4.678h-11v11l4.197-4.197c2.925 3.194 7.13 5.197 11.803 5.197 8.837 0 16-7.163 16-16h-3z">
+      </path>
+    </symbol>
+  </svg>
 
   <section class="main">
     <div id="content">
@@ -816,7 +824,11 @@
             <table cellspacing="0" cellpadding="1" style="width:100%">
               <thead>
                 <tr>
-                  <th style="text-align:left">Files:</th>
+                  <th style="text-align:left">Files:
+                    <svg onclick="onRefreshFiles()" style="float:right;" aria-hidden="true" focusable="false" class="icon">
+                      <use xlink:href="#refresh-icon"></use>
+                    </svg>
+                  </th>
                 </tr>
               </thead>
               <tbody style="height:48px; overflow:auto;" id="files-table-body">
@@ -841,35 +853,38 @@
   </section>
   <script>
     /*jshint esversion: 6 */
+    const filesTable = document.getElementById('files-table-body');
+
     function renderFiles(files, path) {
       let r = [];
       let j = -1;
 
+      for (var key = 0, size = files.length; key < size; key++) {
+        r[++j] = '<tr is_dir="';
+        r[++j] = files[key].is_dir;
+        r[++j] = '" path="';
+        if (path && path !== "") {
+          r[++j] = path;
+          r[++j] = '/';
+        }
+        r[++j] = files[key].name;
+        r[++j] = '"><td><a onclick="onFileClick(this.parentElement.parentElement)">';;
+        if (files[key].is_dir) {
+          r[++j] = '<svg aria-hidden="true" focusable="false" class="icon"><use xlink:href="#folder-icon"></use></svg> ';
+        }
+        r[++j] = files[key].name;
+        r[++j] = '</a>';
+        if (!files[key].is_dir) {
+          r[++j] = '<svg onclick="onFileClick(this.parentElement.parentElement, true)" style="float:right;" aria-hidden="true" focusable="false" class="icon"><use xlink:href="#bin-icon"></use></svg>';
+        }
+        r[++j] = '</td></tr>';
+      }
+
       if (files.length <= 1) {
         r[++j] = '<tr><td>No Files!</td></tr>';
-      } else {
-        for (var key = 0, size = files.length; key < size; key++) {
-          r[++j] = '<tr><td is_dir="';
-          r[++j] = files[key].is_dir;
-          r[++j] = '" path="';
-          if (path && path !== "") {
-            r[++j] = path;
-            r[++j] = '/';
-          }
-          r[++j] = files[key].name;
-          r[++j] = '"><a onclick="onFileClick(this.parentElement)">';;
-          if (files[key].is_dir) {
-            r[++j] = '<svg aria-hidden="true" focusable="false" class="icon"><use xlink:href="#folder-icon"></use></svg> ';
-          }
-          r[++j] = files[key].name;
-          r[++j] = '</a>';
-          if (!files[key].is_dir) {
-            r[++j] = '<svg onclick="onFileClick(this.parentElement, true)" style="float:right;" aria-hidden="true" focusable="false" class="icon"><use xlink:href="#bin-icon"></use></svg>';
-          }
-          r[++j] = '</td></tr>';
-        }
       }
-      document.getElementById('files-table-body').innerHTML = r.join('');
+
+      filesTable.innerHTML = r.join('');
     }
 
     function updateFileBrowser(path = "") {
@@ -883,22 +898,40 @@
         });
     }
 
+    function extractDir(path) {
+      const lastIndex = path.lastIndexOf("/");
+      if (lastIndex != -1) {
+        path = path.substring(0, lastIndex);
+      } else {
+        path = "";
+      }
+      return path;
+    }
+
+    function onRefreshFiles() {
+      const rows = filesTable.getElementsByTagName('tr');
+      if (rows.length > 1) {
+        const backRow = rows[0];
+        if (backRow.hasAttribute('is_dir') && backRow.hasAttribute('path')) {
+          if (backRow.getAttribute('is_dir') === "true") {
+            let path = backRow.getAttribute('path');
+            path = extractDir(path);
+            updateFileBrowser(path);
+          }
+        }
+      }
+    }
+
     function onFileClick(el, del=false) {
       if (el.hasAttribute('is_dir') && el.hasAttribute('path')) {
         let path = el.getAttribute('path');
         if (el.getAttribute('is_dir') === "true") {
-          let lastIndex = path.lastIndexOf("..");
-          if (lastIndex != -1) {
-            path = path.substring(0, lastIndex);
+          if (path.endswith("..")) {
+            path = path.substring(0, path.length - 2);
             if (path.length > 0) {
               path = path.substring(0, path.length - 1);
             }
-            lastIndex = path.lastIndexOf("/");
-            if (lastIndex != -1) {
-              path = path.substring(0, lastIndex);
-            } else {
-              path = "";
-            }
+            path = extractDir(path);
           }
           updateFileBrowser(path);
         } else {
@@ -908,12 +941,7 @@
                   if (response.status !== 200) {
                     alert('Error could not delete file!');
                   } else {
-                    const lastIndex = path.lastIndexOf("/");
-                    if (lastIndex != -1) {
-                      path = path.substring(0, lastIndex);
-                    } else {
-                      path = "";
-                    }
+                    path = extractDir(path);
                     updateFileBrowser(path);
                   }
                 }
