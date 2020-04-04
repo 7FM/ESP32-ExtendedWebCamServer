@@ -881,7 +881,7 @@
       if (el.hasAttribute('is_dir') && el.hasAttribute('path')) {
         let path = el.getAttribute('path');
         if (el.getAttribute('is_dir') === "true") {
-          if (path.endswith("..")) {
+          if (path.endsWith("..")) {
             path = path.substring(0, path.length - 2);
             if (path.length > 0) {
               path = path.substring(0, path.length - 1);
