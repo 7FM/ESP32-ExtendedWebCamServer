@@ -3,6 +3,7 @@
 #include "img_converters.h"
 #include "sensor.h"
 #include <stdio.h>
+#include <sys/time.h>
 
 // Local files
 #include "avi_helper.hpp"
@@ -209,8 +210,13 @@ int handleLapse(sensor_t *s, int lapse) {
 
         const resolution_info_t &res = resolution[s->status.framesize];
 
-        //TODO proper file naming convensions... include date/time?
-        aviFile = fopen("test.avi", "wb");
+        char buf[23];
+        time_t now;
+        struct tm timeinfo;
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        strftime(buf, sizeof(buf), "Timelapse-%H-%M-%S.avi", &timeinfo);
+        aviFile = fopen(buf, "wb");
 
         if (!aviFile) {
             ESP_LOGE(TAG, "Could not open avi file!");

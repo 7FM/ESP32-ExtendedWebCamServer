@@ -441,8 +441,16 @@
 <body>
 
   <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="display:none">
-    <symbol id="folder" viewBox="0 0 29.828 28">
+    <symbol id="folder-icon" viewBox="0 0 29.828 28">
       <path d="M27.828 14.547c0-.438-.484-.547-.828-.547H10c-.828 0-1.922.516-2.453 1.156l-4.594 5.672c-.14.188-.281.39-.281.625 0 .438.484.547.828.547h17c.828 0 1.922-.516 2.453-1.172l4.594-5.672c.14-.172.281-.375.281-.61zM10 12h12V9.5A1.5 1.5 0 0020.5 8h-9A1.5 1.5 0 0110 6.5v-1A1.5 1.5 0 008.5 4h-5A1.5 1.5 0 002 5.5v13.328l4-4.922C6.906 12.796 8.578 12 10 12zm19.828 2.547c0 .687-.297 1.344-.719 1.875L24.5 22.094c-.89 1.093-2.594 1.906-4 1.906h-17A3.514 3.514 0 010 20.5v-15C0 3.578 1.578 2 3.5 2h5C10.422 2 12 3.578 12 5.5V6h8.5C22.422 6 24 7.578 24 9.5V12h3c1.062 0 2.125.484 2.594 1.484.156.329.234.688.234 1.063z" />
+    </symbol>
+  </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="display:none">
+    <symbol id="bin-icon" viewBox="0 0 32 32">
+      <path d="M4 10v20c0 1.1 0.9 2 2 2h18c1.1 0 2-0.9 2-2v-20h-22zM10 28h-2v-14h2v14zM14 28h-2v-14h2v14zM18 28h-2v-14h2v14zM22 28h-2v-14h2v14z">
+      </path>
+      <path d="M26.5 4h-6.5v-2.5c0-0.825-0.675-1.5-1.5-1.5h-7c-0.825 0-1.5 0.675-1.5 1.5v2.5h-6.5c-0.825 0-1.5 0.675-1.5 1.5v2.5h26v-2.5c0-0.825-0.675-1.5-1.5-1.5zM18 4h-6v-1.975h6v1.975z">
+      </path>
     </symbol>
   </svg>
 
@@ -804,8 +812,8 @@
         <label for="files-toggle-cb" id="files-toggle">&#9776;&nbsp;&nbsp;Toggle File Browser</label>
         <input type="checkbox" id="files-toggle-cb" checked="checked">
         <nav id="files_menu">
-          <div id="files-container">
-            <table cellspacing="0" cellpadding="1" width="300">
+          <div id="files-container" style="width:100%">
+            <table cellspacing="0" cellpadding="1" style="width:100%">
               <thead>
                 <tr>
                   <th style="text-align:left">Files:</th>
@@ -836,24 +844,30 @@
     function renderFiles(files, path) {
       let r = [];
       let j = -1;
-      for (var key = 0, size = files.length; key < size; key++) {
-        r[++j] = '<tr><td><a onclick="onFileClick(this)" is_dir="';
-        r[++j] = files[key].is_dir;
-        r[++j] = '" path="';
-        if (path && path !== "") {
-          r[++j] = path;
-          r[++j] = '/';
-        }
-        r[++j] = files[key].name;
-        r[++j] = '">';
-        if (files[key].is_dir) {
-          r[++j] = '<svg aria-hidden="true" focusable="false" class="icon"><use xlink:href="#folder"></use></svg>';
-        }
-        r[++j] = files[key].name;
-        r[++j] = '</a></td></tr>';
-      }
+
       if (files.length <= 1) {
         r[++j] = '<tr><td>No Files!</td></tr>';
+      } else {
+        for (var key = 0, size = files.length; key < size; key++) {
+          r[++j] = '<tr><td is_dir="';
+          r[++j] = files[key].is_dir;
+          r[++j] = '" path="';
+          if (path && path !== "") {
+            r[++j] = path;
+            r[++j] = '/';
+          }
+          r[++j] = files[key].name;
+          r[++j] = '"><a onclick="onFileClick(this.parentElement)">';;
+          if (files[key].is_dir) {
+            r[++j] = '<svg aria-hidden="true" focusable="false" class="icon"><use xlink:href="#folder-icon"></use></svg> ';
+          }
+          r[++j] = files[key].name;
+          r[++j] = '</a>';
+          if (!files[key].is_dir) {
+            r[++j] = '<svg onclick="onFileClick(this.parentElement, true)" style="float:right;" aria-hidden="true" focusable="false" class="icon"><use xlink:href="#bin-icon"></use></svg>';
+          }
+          r[++j] = '</td></tr>';
+        }
       }
       document.getElementById('files-table-body').innerHTML = r.join('');
     }
@@ -869,11 +883,11 @@
         });
     }
 
-    function onFileClick(el) {
+    function onFileClick(el, del=false) {
       if (el.hasAttribute('is_dir') && el.hasAttribute('path')) {
-        var path = el.getAttribute('path');
+        let path = el.getAttribute('path');
         if (el.getAttribute('is_dir') === "true") {
-          var lastIndex = path.lastIndexOf("..");
+          let lastIndex = path.lastIndexOf("..");
           if (lastIndex != -1) {
             path = path.substring(0, lastIndex);
             if (path.length > 0) {
@@ -888,7 +902,25 @@
           }
           updateFileBrowser(path);
         } else {
-          window.open(`${document.location.origin}/fs?path=${encodeURIComponent(path)}`);
+          if (del) {
+            fetch(`${document.location.origin}/fs?del=1&path=${encodeURIComponent(path)}`)
+              .then(function (response) {
+                  if (response.status !== 200) {
+                    alert('Error could not delete file!');
+                  } else {
+                    const lastIndex = path.lastIndexOf("/");
+                    if (lastIndex != -1) {
+                      path = path.substring(0, lastIndex);
+                    } else {
+                      path = "";
+                    }
+                    updateFileBrowser(path);
+                  }
+                }
+              );
+          } else {
+            window.open(`${document.location.origin}/fs?path=${encodeURIComponent(path)}`);
+          }
         }
       }
     }
