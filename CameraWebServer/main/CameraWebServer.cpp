@@ -154,6 +154,7 @@ extern "C" void app_main() {
     String hMirror;
     String vFlip;
 #ifdef OTA_FEATURE
+//TODO implement external cert support
     String otaCertPath;
 #endif
 

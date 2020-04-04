@@ -1,8 +1,10 @@
 #include "esp_http_server.h"
-#include <ctype.h>
 #include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
+#ifdef CONFIG_FATFS_LFN_NONE
+#include <ctype.h>
+#endif
 
 // Local files
 #include "config.h"

@@ -468,7 +468,7 @@ inline void mergeAndPatch(FILE *aviFile, FILE *indexFile, size_t *offset, size_t
     // patch header fields
     PATCH_FIELD(aviFile, AVI_MAIN_HEADER_START + PATCH_AVI_MAIN_HEADER_MAX_BYTES_PER_SEC_OFFSET, maxFrameBytes * videoFPS); //TODO this field might need no patch because it will probably be ignored anyway
     PATCH_FIELD(aviFile, AVI_MAIN_HEADER_START + PATCH_AVI_MAIN_HEADER_TOTAL_FRAMES_OFFSET, framesTaken);
-    PATCH_FIELD(aviFile, AVI_STREAM_HEADER_START + PATCH_AVI_STREAM_HEADER_LENGTH_OFFSET, framesTaken);
+    PATCH_FIELD(aviFile, AVI_STREAM_HEADER_START + PATCH_AVI_STREAM_HEADER_LENGTH_OFFSET, framesTaken); //TODO I think this should be framesTaken/videoFPS
 }
 
 inline size_t createAVI_File(FILE *outFile, const AVIMainHeader &aviHeader, const AVIStreamHeader &streamHeader, const AVIStreamFormat &streamFormat) {
