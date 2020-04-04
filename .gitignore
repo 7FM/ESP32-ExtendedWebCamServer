@@ -13,3 +13,4 @@ build
 config.txt
 *.pem
 *.gz
+sdkconfig.old
