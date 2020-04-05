@@ -346,7 +346,7 @@ static esp_err_t status_handler(httpd_req_t *req) {
     *p++ = '{';
 
     p += sprintf(p, "\"board\":\"%s\",", CAM_BOARD);
-    p += sprintf(p, "\"xclk\":%u,", s->xclk_freq_hz / 1000000);
+    p += sprintf(p, "\"xclk\":\"%u\",", s->xclk_freq_hz / 1000000);
     p += sprintf(p, "\"pixformat\":%u,", s->pixformat);
     p += sprintf(p, "\"framesize\":%u,", s->status.framesize);
     p += sprintf(p, "\"quality\":%u,", s->status.quality);
