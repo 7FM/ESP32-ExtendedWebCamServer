@@ -201,9 +201,11 @@ extern "C" void app_main() {
 #ifdef OTA_FEATURE
     if (isWiFiSTAMode) {
         int i = 0;
+
+        // Wait for 1s
+        const TickType_t delay = pdMS_TO_TICKS(1000);
         do {
-            // Wait for 1s
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(delay);
             ESP_LOGI(TAG, "Wait until connected to wifi since %ds", i);
             ++i;
             if (i >= 10) {
@@ -223,6 +225,8 @@ extern "C" void app_main() {
     startCameraServer();
 
     if (isWiFiSTAMode) {
+        // Wait for 60s
+        const TickType_t delay = pdMS_TO_TICKS(60000);
         for (;;) {
             if (!isConnectedToWiFi) {
                 ESP_LOGI(TAG, "***** WiFi restart *****");
@@ -232,8 +236,7 @@ extern "C" void app_main() {
                 }
             }
 
-            // Wait for 60s
-            vTaskDelay(60000 / portTICK_PERIOD_MS);
+            vTaskDelay(delay);
         }
     }
 }

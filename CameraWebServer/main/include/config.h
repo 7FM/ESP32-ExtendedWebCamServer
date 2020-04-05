@@ -62,9 +62,6 @@
 
 // Flash LED Options: //TODO update/add
 
-// TODO changable?
-#define FLASH_LIGHT_WAIT 150 / portTICK_PERIOD_MS
-
 #ifdef CONFIG_LED_LEDC_LOW_SPEED_MODE
 #define CONFIG_LED_LEDC_SPEED_MODE LEDC_LOW_SPEED_MODE
 #else

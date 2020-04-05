@@ -57,10 +57,12 @@ extern bool SDCardAvailable;
 extern volatile int isWiFiSTAMode;
 
 // Local status variables
+static bool isStreaming = false;
 static int camLEDStatus = 0;
 static int useFlash = 0;
 static int led_duty = 255;
-static bool isStreaming = false;
+static int flash_duration = 150;
+static TickType_t flash_wait = pdMS_TO_TICKS(flash_duration);
 
 static inline void enable_led(bool en) { // Turn LED On or Off
     int duty = 0;
@@ -81,8 +83,7 @@ camera_fb_t *takePicture() {
 
     if (mustEnableFlashLight) {
         enable_led(true);
-        //TODO during runtime customizable?
-        vTaskDelay(FLASH_LIGHT_WAIT);
+        vTaskDelay(flash_wait);
     }
 
     camera_fb_t *fb = esp_camera_fb_get();
@@ -167,7 +168,6 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
-    //TODO LED?
     isStreaming = true;
 
     do {
@@ -300,7 +300,12 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
         res = handleLED(val);
     } else if (!strcmp(variable, "use_flash")) {
         useFlash = val;
-    } else if (!strcmp(variable, "lapse-running")) {
+    } else if (!strcmp(variable, "flash_duration")) {
+        if (val > 0) {
+            flash_duration = val;
+            flash_wait = pdMS_TO_TICKS(flash_duration);
+        }
+    }else if (!strcmp(variable, "lapse-running")) {
         if (SDCardAvailable) {
             res = handleLapse(s, val);
         }
@@ -369,6 +374,7 @@ static esp_err_t status_handler(httpd_req_t *req) {
     p += sprintf(p, "\"colorbar\":%u,", s->status.colorbar);
     p += sprintf(p, "\"led\":%u,", camLEDStatus);
     p += sprintf(p, "\"use_flash\":%u,", useFlash);
+    p += sprintf(p, "\"flash_duration\":%u,", flash_duration);
     p += sprintf(p, "\"led_intensity\":%u,", led_duty);
     p += sprintf(p, "\"toggle-lapse\":%s,", BOOL_TO_STR(lapseRunning));
     p += sprintf(p, "\"sd-avail\":%s,", BOOL_TO_STR(SDCardAvailable));

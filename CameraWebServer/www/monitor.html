@@ -395,7 +395,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
     /*
     *  AJAX
     */
-    function fetchTimeout(url, options, timeout = 2000) {
+    function fetchTimeout(url, options, timeout = 10000) {
       return Promise.race([
         fetch(url, options),
         new Promise((_, reject) =>
@@ -889,7 +889,6 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
     /*
     *  MDNS
     */
-    //const baseHost = 'http://192.168.254.81';
     const baseHost = document.location.origin;
 
     function scanMdns() {
@@ -980,8 +979,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
             <option value="30">30 Minutes</option>
             <option value="60">1 Hour</option>
           </select>
-          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-search fitem disable"
-            id="refresh-mdns" title="Search"></button>
+          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-search fitem disable" id="refresh-mdns" title="Search"></button>
 
           <select class="form-control sitem" id="refresh-thumbs-interval">
             <option value="0">OFF</option>
@@ -992,8 +990,7 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
             <option value="30">30s</option>
             <option value="60">60s</option>
           </select>
-          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-camera fitem disable"
-            id="refresh-thumbs" title="Refresh"></button>
+          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-camera fitem disable" id="refresh-thumbs" title="Refresh"></button>
 
           <select class="form-control sitem" id="switch-cams-interval">
             <option value="0">OFF</option>
@@ -1004,18 +1001,13 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
             <option value="30">30s</option>
             <option value="60">60s</option>
           </select>
-          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-step-forward fitem" id="switch-cams"
-            title="Switch Cams"></button>
+          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-step-forward fitem" id="switch-cams" title="Switch Cams"></button>
         </div>
       </div>
       <div id="stream-holder">
         <div class="row  disable" id="controls-holder">
-          <a id="save-still" href="#" class="btn btn-sm glyphicon btn-danger glyphicon-picture"
-            download="capture.jpg"></a>
-
-          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-play" id="play-stop"
-            title="Play/Stop"></button>
-
+          <a id="save-still" href="#" class="btn btn-sm glyphicon btn-danger glyphicon-picture" download="capture.jpg"></a>
+          <button type="button" class="btn btn-sm glyphicon btn-success glyphicon-play" id="play-stop" title="Play/Stop"></button>
           <select class="form-control" id="resolution" placeholder="Resolution"></select>
 
           <select class="form-control" id="xclk" placeholder="XCLK MHz">
@@ -1031,9 +1023,9 @@ html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:1
           </div>
         </div>
         <div class="row" id="console-holder">
-          <h4 class="text-center">Console<button type="button"
-              class="btn btn-sm glyphicon btn-default glyphicon-chevron-down panel-action" id="hide-console"
-              title="Hide/Show Console"></button></h4>
+          <h4 class="text-center">Console
+            <button type="button" class="btn btn-sm glyphicon btn-default glyphicon-chevron-down panel-action" id="hide-console" title="Hide/Show Console"></button>
+          </h4>
           <div class="well" id="console" title="Console">
             <div id="gCodeLog"></div>
           </div>

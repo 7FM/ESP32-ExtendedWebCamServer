@@ -67,10 +67,11 @@ static void mdns_query_for_cams() {
 }
 
 static void mdns_task(void *arg) {
+    //delay 55 seconds
+    const TickType_t delay = pdMS_TO_TICKS(55000);
     for (;;) {
         mdns_query_for_cams();
-        //delay 55 seconds
-        vTaskDelay((55 * 1000) / portTICK_PERIOD_MS);
+        vTaskDelay(delay);
     }
     vTaskDelete(NULL);
 }

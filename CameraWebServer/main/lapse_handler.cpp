@@ -180,7 +180,7 @@ int handleLapse(sensor_t *s, int lapse) {
         vTaskSuspend(cameraTask);
 
         // Loop until queue is empty
-        const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+        const TickType_t xDelay = pdMS_TO_TICKS(500);
         while (uxQueueMessagesWaiting(frameQueue)) {
             vTaskDelay(xDelay);
         }

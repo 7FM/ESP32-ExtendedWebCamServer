@@ -725,6 +725,15 @@
               <label class="slider" for="use_flash"></label>
             </div>
           </div>
+          <div class="input-group" id="flash_duration-group">
+            <label for="flash_duration">Flash Duration in ms</label>
+            <div class="range-min">1</div>
+            <div class="range-wrap">
+              <div class="range-value" for="flash_duration"></div>
+              <input type="range" id="flash_duration" min="1" max="1000" step="10" value="150" class="default-action">
+            </div>
+            <div class="range-max">1000</div>
+          </div>
           <div class="input-group" id="video_fps-group">
             <label for="video_fps">Lapse Video FPS</label>
             <div class="range-min">1</div>
@@ -928,7 +937,7 @@
       }
     }
 
-    function onFileClick(el, del=false) {
+    function onFileClick(el, del = false) {
       if (el.hasAttribute('is_dir') && el.hasAttribute('path')) {
         let path = el.getAttribute('path');
         if (el.getAttribute('is_dir') === "true") {
@@ -944,14 +953,13 @@
           if (del) {
             fetch(`${document.location.origin}/fs?del=1&path=${encodeURIComponent(path)}`)
               .then(function (response) {
-                  if (response.status !== 200) {
-                    alert('Error could not delete file!');
-                  } else {
-                    path = extractDir(path);
-                    updateFileBrowser(path);
-                  }
+                if (response.status !== 200) {
+                  alert('Error could not delete file!');
+                } else {
+                  path = extractDir(path);
+                  updateFileBrowser(path);
                 }
-              );
+              });
           } else {
             window.open(`${document.location.origin}/fs?path=${encodeURIComponent(path)}`);
           }
@@ -1073,6 +1081,12 @@
               show(wb);
             } else {
               hide(wb);
+            }
+          } else if (el.id === "use_flash") {
+            if (value) {
+              show(flash_duration);
+            } else {
+              hide(flash_duration);
             }
           }
         }
@@ -1275,18 +1289,35 @@
         });
 
       // Custom actions
+
+      // Flash
+      const flash = document.getElementById('use_flash');
+      const flash_duration = document.getElementById('flash_duration-group');
+      flash.onchange = () => {
+        if (!flash.classList.contains('disabled')) {
+          updateConfig(flash);
+          if (flash.checked) {
+            show(flash_duration);
+          } else {
+            hide(flash_duration);
+          }
+        }
+      };
+
       // Gain
       const agc = document.getElementById('agc');
       const agcGain = document.getElementById('agc_gain-group');
       //const gainCeiling = document.getElementById('gainceiling-group');
       agc.onchange = () => {
-        updateConfig(agc);
-        if (agc.checked) {
-          //show(gainCeiling);
-          hide(agcGain);
-        } else {
-          //hide(gainCeiling);
-          show(agcGain);
+        if (!agc.classList.contains('disabled')) {
+          updateConfig(agc);
+          if (agc.checked) {
+            //show(gainCeiling);
+            hide(agcGain);
+          } else {
+            //hide(gainCeiling);
+            show(agcGain);
+          }
         }
       };
 
@@ -1294,11 +1325,13 @@
       const aec = document.getElementById('aec');
       const exposure = document.getElementById('aec_value-group');
       aec.onchange = () => {
-        updateConfig(aec);
-        if (aec.checked) {
-          hide(exposure);
-        } else {
-          show(exposure);
+        if (!aec.classList.contains('disabled')) {
+          updateConfig(aec);
+          if (aec.checked) {
+            hide(exposure);
+          } else {
+            show(exposure);
+          }
         }
       };
 
@@ -1306,11 +1339,13 @@
       const awb = document.getElementById('awb_gain');
       const wb = document.getElementById('wb_mode-group');
       awb.onchange = () => {
-        updateConfig(awb);
-        if (awb.checked) {
-          show(wb);
-        } else {
-          hide(wb);
+        if (!awb.classList.contains('disabled')) {
+          updateConfig(awb);
+          if (awb.checked) {
+            show(wb);
+          } else {
+            hide(wb);
+          }
         }
       };
 
