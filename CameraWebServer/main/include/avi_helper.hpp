@@ -53,7 +53,7 @@ typedef struct {
     // starting time, typically 0
     // size of AVI data chunk in time scale units
     uint32_t _reserved[4] = {0};
-} AVIMainHeader;
+} __attribute__((packed)) AVIMainHeader;
 
 #define AVI_STREAM_HEADER_FCCTYPE_AUDIO CONVERT_TO_FCC("auds")
 #define AVI_STREAM_HEADER_FCCTYPE_MIDI CONVERT_TO_FCC("mids")
@@ -92,7 +92,7 @@ typedef struct {
     uint32_t _quality = 0;
     //number of bytes of one stream atom (that should not be split any further).
     uint32_t _sampleSize = 0;
-} AVIStreamHeader;
+} __attribute__((packed)) AVIStreamHeader;
 
 typedef struct _AVIStreamFormat {
     /*
@@ -130,7 +130,7 @@ typedef struct _AVIStreamFormat {
     uint32_t _biClrUsed = 0;
     // Specifies the number of color indices that are considered important for displaying the bitmap. If this value is zero, all colors are important.
     uint32_t _biClrImportant = 0;
-} AVIStreamFormat;
+} __attribute__((packed)) AVIStreamFormat;
 
 /*
 static const char LIST_FORM[] = {
